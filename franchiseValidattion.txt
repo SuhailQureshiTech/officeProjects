@@ -1,0 +1,57 @@
+
+
+from datetime import date
+import pandas as pd
+import numpy as np
+
+df = pd.read_excel('Sales and Stock.xlsx', sheet_name="Sales")
+
+# D:\Google Drive - Office\PythonLab\TestCoding
+
+# df1 = df[df['Franchise Code'].apply(lambda x: len(str(x))>10 or len(str(x))<10)]
+# print(df1['Franchise Code'])
+
+df.columns = df.columns.str.strip()
+if df['Franchise Code'].apply(lambda x: len(str(x))>10 or len(str(x))<10).any():
+    print('(Franchise Code) data length must not greater or less than 10 character')
+
+if df['Franchise Code'].dtypes == object:
+    print('(Franchise Code) contains alphanumeric data')
+
+try:    
+    df['Franchise Customer Invoice Date'] = pd.to_datetime(df['Franchise Customer Invoice Date'])
+except Exception as  ex:
+    print(' ex : ',ex)    
+
+# print(df.info())
+
+# if (df['Reason'].isin(['Sales'])).any() and (df['Gross Amount']<0).any():
+#     print('found.. sales with negative value')
+
+# if (df['Reason'].isin(['Return'])).any() and (df['Gross Amount']>0).any():
+#     print('found.. return with postive value')
+
+# print(df.info())
+
+dfGrossSales=df.query("( `Gross Amount`<0 or `Quantity Sold`<0 or `FOC`<0  )and  `Reason`=='Sales' ")
+dfGross=df.query("(`Gross Amount`>0 or `Quantity Sold`>0 or `FOC`>0 ) and  `Reason`=='Return' ")
+
+if len(dfGrossSales)>0:
+    print('found sales with negative amount in (Gross Amount or Quantity Sold or FOC)')
+
+
+if len(dfGros
+    print('found return with postive amount with return')
+    
+
+
+# dfGross=df.query("`Reason`=='Sales' ")
+
+# print(dfGross)
+# dfGross.to_csv('grossAmountNeg.csv')
+
+if (~df['Reason'].isin(['Sales', 'Return'])).any():
+    print('found.. other than Sales/Return............')
+
+# print(df.info())
+# print(df)

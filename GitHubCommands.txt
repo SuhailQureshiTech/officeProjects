@@ -1,0 +1,55 @@
+
+
+git branch -M main
+
+# git show all global values
+git config --global --list --show-origin
+
+# removing large files from commit stagged
+git filter-branch --tree-filter 'rm -rf S4HanaDataValidation/Data/6300-6100-01July-20JulyData.csv' HEAD
+
+#restore from staged
+git restore RaadMe.txt
+
+
+git config core.sparsecheckout true
+echo 'sftp-Ftp' >> .git/info/sparse-checkout
+git clone https://github.com/SuhailQureshiTech/GitHubPython/tree/main/API/IkonApiFinal
+
+# git pull -- Being update from remote
+git branch --set-upstream-to=origin/main main
+git pull 
+# git pull -- End
+
+git branch --set-upstream-to=origin/GitHubPython main
+git pull https://github.com/SuhailQureshiTech/GitHubPython.git
+
+# pulling specific branch from gitHub
+https://linuxhint.com/pull-specific-directory-with-git/
+
+git remote set-url git@github.com:SuhailQureshiTech/GitHubPython.git
+
+git remote add origin git@github.com:SuhailQureshiTech/GitHubPython.git
+
+git config --global user.name "SuhailQureshi"
+git config --global user.email "suhailqureshi.ibl@gmail"
+
+# GitHub
+#generating key
+ssh-keygen -t ed25519 -C "suhailqureshi.ibl@gmail.com"
+
+# adding in agent
+ssh-add ~/.ssh/id_ed25519
+
+#clone the repository
+git clone git@github.com:SuhailQureshiTech/PythonLab.git
+
+git clone -b Franchise git@github.com:SuhailQureshiTech/PythonLab.git
+
+
+git clone --single-branch --branch Franchise git@github.com:SuhailQureshiTech/PythonLab.git
+
+#Remote Listing
+git ls-remote --heads git@github.com:SuhailQureshiTech/PythonLab.git
+
+#Upstream Error.
