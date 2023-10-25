@@ -1,0 +1,12 @@
+{
+  "type": "service_account",
+  "project_id": "data-light-house-prod",
+  "private_key_id": "0baa98f571525daa7636f19eb5f1d42a3f7c5ff3",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCSJ1C96bMEVNU6\nPxkp3IEI0leFF12feK4vc6WwDMmnyhnrloXCth2eiYnxJGTW69vHU9vUHJWosyYG\n5VYacyzPWILudYC6Xj1fJPX8vzl7HPhgma7wd9KP+byqkaVB/UH8CZGRLfIqvHvk\n4dkr/5doGOFFwMNwczCHM6dsFP+ptrobXHMLLY6tK04kcoWueR+8jA1oyuUt60ZN\nSbcDtEkdaMz+3mTLvhuo1hkPwga35DxSgTtve1GDF4Fg35n2LRkZvc7h9ybTAVIT\ngAa9+CJ9OUJSiqr6gGqToP9k5E3AuVLgb2VbrOi4c83/dSV9ac9N363xOZRqIY44\nCzmIxD1nAgMBAAECggEAHrjE8Ca/yplKeQPqdjIzrXcJjqBqvarQcokMuwT1HqAM\n8sihNVyyvTCMHnRX/hV2DWBDRUL88ok15R0wDD9JnAwu+ZEZjhNhMy7Bxm8r1gUw\n8J1deI63ZCxKzE/xPP3PcPtR7gKKdRFJucL/s4/2c5tHPzJV4r1T5helicKgOzws\nb1kqkdGMHbQbOa+quq2mxVxAltrNhr2D0uN/cmeSQQDV6fh2Bo/7yfarNFCC0+A+\no/gQDnxvLraqeaoos9aAYMTWfBwTsM70rF1jDWXGj1uWSkMLqwG02CJahUOgKHNx\nqU+wkxfQ6MlN4Ma3pAPl800gfqvzn2fMlvfmPX04AQKBgQDDsaejt+n8jXeomrYX\naiYOlASrCDwIoWc0Fu9oMYHDo+etVBqY39EVK4iU02rYRJycax9qo15HxNJ4YGz2\nKoDemB0mm7AQsksOtN7Fae0mrQIp0fG1QhgpLgIVgx/IPhrSOmNRSCNTV6af+Do0\nL39K1DUjv9cQVyG0D561OUMLpwKBgQC/MWg2S07oXPKDrv8/ZN/5UOjMKx/gYq9I\n6c2gxix8/XX+dncV+X3H3Zd0kg0Dja9Yd3ZBqRgG3DDxgbMdvNI1URDpq1JjfboG\nzTKo5UXH+5XWrxrIQ+c3sxb8LLqb4f6mLB4IIac988oVKaKNzBD8KjjjxFTL0RPY\n/dKNbXh4QQKBgHg8DO3QL9lV6fETrVFRjLRkSUH0Oz5qPIiKlumDkWDssYmTJQxM\nZ6AEMVSPWRQrg7WvM4xHd8PMsCv5wri0gJ1DBJYWDeUURn1wr3bHkEe1AKFFNqbR\nRxr2A53IBJz5W21TJnZoRhwMvHmI/+nUTPdizot6cN6/ShvhhPd/iSv9AoGBAKa4\nMqOFr903j9H8e1+QWy5Qu2+t+zHzW9484q5boNetPYMTUmy7Dk+Gj1d7NBXxKwH9\nygUfqm/w+kzeSI6Z5MPRWOoqFsHjFKBxtsdIhj0IyXRXZQdVDv6nEFf9uQvNWf0V\nY2q7zdZcC8/AapszY2xAdTNINJk2TBRf4Yap+u8BAoGAIRHUlX/RzWKS5JE9H2CC\n5EwAFM/G4FZyBKL7+yYuVaMpNYqBeIdIEq26TuehHW9kmy9Fh8zu820O663nonQS\nmlWhD4x7+vNFYUrAfS3o/L3zyL+Wu2/BTT/o8t2T2/ZKsxRWhfzrnGYMdypbkA2d\nomJQpe04rLHVC7WIgxd6PqU=\n-----END PRIVATE KEY-----\n",
+  "client_email": "prd-bq-gcs@data-light-house-prod.iam.gserviceaccount.com",
+  "client_id": "117412381078684542080",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/prd-bq-gcs%40data-light-house-prod.iam.gserviceaccount.com"
+}
