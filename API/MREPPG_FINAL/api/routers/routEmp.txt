@@ -1,0 +1,27 @@
+from typing import Optional
+from fastapi import APIRouter,Depends,HTTPException,status
+from sqlalchemy.orm import Session
+from datetime import date, datetime
+from ..database import database
+from ..models   import oracleModels
+from ..repository import repEmp
+
+router=APIRouter(
+    prefix='/emp',
+    tags=['EmpApi']
+)
+
+@router.get('/')
+def getByHireDate(
+        hireDate : date,
+        db: Session=Depends(database.get_Oracledb)
+        ):
+    return repEmp.getByHireDate(hireDate,db)
+
+@router.get('/allEmp')
+def listAllEmp(
+                db: Session=Depends(database.get_Oracledb),apiKey: Optional[str]=None
+
+               ):
+    return repEmp.getAllEmp(db,apiKey)
+

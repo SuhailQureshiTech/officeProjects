@@ -1,0 +1,15 @@
+sqlalchemy
+databases
+DateTime
+typing
+uuid
+pydantic
+fastapi
+uvicorn
+passlib
+bcrypt
+python-jose
+python-multipart
+sourcedefender
+asyncpg
+
