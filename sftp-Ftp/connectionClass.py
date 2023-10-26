@@ -1,0 +1,95 @@
+from pickle import TRUE
+import platform
+from hdbcli import dbapi
+import pandas as pd
+from google.cloud import storage
+import os
+from google.oauth2 import service_account
+from sqlalchemy import create_engine
+import sqlalchemy
+import pyodbc
+import cx_Oracle as xo
+
+#verify the architecture of Python
+print ("Platform architecture: " + platform.architecture()[0])
+
+#Initialize credentials variables:
+address = '10.210.134.204',
+port = '33015',
+user = 'Etl',
+password = 'EtlIbl12345'
+
+def getSpecChars():
+    spec_chars = ["!", '"', "#", "%", "&", "'" ,"\(","\)"
+            ,"\*" ,"\+"  ,","   ,"-" , "/"  ,":",";", "<","=", ">"
+            ,"\?","@","\[","\]","^","_","`", "{"
+            , "}", "~", "–"
+                ]
+    return spec_chars
+
+#Initialize your connection
+def sapConn():
+    conn = dbapi.connect(
+        address='10.210.134.204',
+        port='33015',
+        user='Etl',
+        password='EtlIbl12345' )
+    return conn
+
+
+def s4HanaConnection():
+    conn = dbapi.connect(
+
+        address='10.210.134.205',
+        port='33015',
+        user='Etl',
+        password='Etl@2024' )
+    return conn
+
+def sapConnAlchemy():
+    hdb_user = 'ETL'
+    hdb_password = 'EtlIbl12345'
+    hdb_host = '10.210.134.204'
+    hdb_port = '33015'
+    connection_string ='hana://%s:%s@%s:%s/?encrypt=true&sslvalidatecertificate=false' % (
+        hdb_user, hdb_password, hdb_host, hdb_port)
+    return connection_string
+
+def markittSqlServer():
+    server = '172.20.7.71\SQLSERVER2017'
+    db = 'Markitt2021-2022'
+    user = 'syed.shujaat'
+    password = 'new$5201'
+    schema = 'dbo'
+    conn = pyodbc.connect('DRIVER={ODBC Driver 18 for SQL Server};SERVER='+server +
+                    ';DATABASE='+db+';UID='+user + ';PWD='+password+';TrustServerCertificate=Yes')
+    return conn
+
+def markittSqlServerAlchmy():
+    server = '172.20.7.71\SQLSERVER2017'
+    db = 'Markitt2021-2022'
+    user = 'syed.shujaat'
+    password = 'new$5201'
+    schema = 'dbo'
+    connect_string = 'mssql+psycopg2://syed.shujaat:new$5201@172.20.7.71:1433/Markitt2021-2022'
+    engine = sqlalchemy.create_engine(connect_string)
+    return engine
+
+
+def oracleIlgrpHcm():
+    oracleConnectionDB = xo.connect('IBLGRPHCM', 'iblgrp106hcm',
+                        xo.makedsn('Sap-Router-e416ea262b67e5f4.elb.ap-southeast-1.amazonaws.com', 6464, 'cdb1'))
+    return oracleConnectionDB
+
+def FranchiseAlchmy():
+
+    # engine = create_engine('postgresql+psycopg2://user:password@hostname/database_name')
+
+    host = '34.65.6.130'
+    db = 'test_db'
+    user = 'franchise'
+    password = 'franchisePassword!123!456'
+    schema = 'test_schema'
+    connect_string =f"postgresql+psycopg2://{user}:{password}@{host}:5432/{db}"
+    engine = sqlalchemy.create_engine(connect_string)
+    return engine

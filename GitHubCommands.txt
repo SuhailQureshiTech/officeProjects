@@ -14,7 +14,7 @@ git restore RaadMe.txt
 
 git config core.sparsecheckout true
 echo 'sftp-Ftp' >> .git/info/sparse-checkout
-git clone https://github.com/SuhailQureshiTech/GitHubPython/tree/main/API/IkonApiFinal
+git clone https://github.com/SuhailQureshiTech/officeProjects/tree/main/API/IkonApiFinal
 
 # git pull -- Being update from remote
 git branch --set-upstream-to=origin/main main

@@ -1,0 +1,354 @@
+
+**** Log file opened at 2021-12-20 12:15:47.092764 UTC+05:00 (Pakistan Standard Time), Encoding UTF-8
+NW RFC Library: SDK variant, Release 750 Patch Level 8, Compiled on Apr 17 2021 03:23:42
+ CPIC library: 753.2020.03.230 version 3, NI library: 40, Kernel Release: 753 Patch Level 814
+ Current working directory: D:\Google Drive - Office\PythonLab\ApiConsume, Program: python
+ Hardware: PC with Windows NT 8x AMD64 Level 6 (Mod 142 Step 12), Operating_system: Windows NT 10.0
+ Hostname: GRP-IT-SUHAIL1, IP address: 192.168.71.1, IPv6 address: fe80::7917:aeac:dd60:e4ca
+
+2021-12-20 12:15:47.092924 [04268] >> Info entry
+	Did not find config file D:\Google Drive - Office\PythonLab\ApiConsume\sapnwrfc.ini.
+2021-12-20 12:15:47.112072 [04268] >> Error entry
+	[Handle: 3008143670144	ConvID: 	Target: 	SysID: 	SysNr: 	User: 	Codepage: 4103]
+	RfcCommunicationException: Return Value: -101, Code: RFC_COMMUNICATION_FAILURE, Message: 
+ERROR       partner '10.210.166.202:' not reached
+TIME        Mon Dec 20 12:15:47 2021
+RELEASE     753
+COMPONENT   NI (network interface)
+VERSION     40
+RC          -10
+MODULE      D:/depot/bas/753_REL/src/base/ni/nixxi.cpp
+LINE        3062
+DETAIL      NiPConnect: 10.210.166.202:0
+SYSTEM CALL connect
+ERRNO       10049
+ERRNO TEXT  WSAEADDRNOTAVAIL: Can't assign requested address
+COUNTER     1
+
+
+**** Log file opened at 2021-12-20 12:33:19.287428 UTC+05:00 (Pakistan Standard Time), Encoding UTF-8
+NW RFC Library: SDK variant, Release 750 Patch Level 8, Compiled on Apr 17 2021 03:23:42
+ CPIC library: 753.2020.03.230 version 3, NI library: 40, Kernel Release: 753 Patch Level 814
+ Current working directory: D:\Google Drive - Office\PythonLab\ApiConsume, Program: python
+ Hardware: PC with Windows NT 8x AMD64 Level 6 (Mod 142 Step 12), Operating_system: Windows NT 10.0
+ Hostname: GRP-IT-SUHAIL1, IP address: 192.168.71.1, IPv6 address: fe80::7917:aeac:dd60:e4ca
+
+2021-12-20 12:33:19.287572 [15276] >> Error entry
+	[Handle: 2553626611424	ConvID: 	Target: 	SysID: 	SysNr: 	User: 	Codepage: 4103]
+	RfcCommunicationException: Return Value: 20, Code: RFC_COMMUNICATION_FAILURE, Message: 
+LOCATION    CPIC (TCP/IP) on local host GRP-IT-SUHAIL1 with Unicode
+ERROR       partner '10.210.166.202:3300' not reached
+TIME        Mon Dec 20 12:33:19 2021
+RELEASE     753
+COMPONENT   NI (network interface)
+VERSION     40
+RC          -10
+MODULE      D:/depot/bas/753_REL/src/base/ni/nixxi.cpp
+LINE        3449
+DETAIL      NiPConnect2: 10.210.166.202:3300
+SYSTEM CALL connect
+ERRNO       10061
+ERRNO TEXT  WSAECONNREFUSED: Connection refused
+COUNTER     2
+
+
+**** Log file opened at 2021-12-20 12:50:31.437230 UTC+05:00 (Pakistan Standard Time), Encoding UTF-8
+NW RFC Library: SDK variant, Release 750 Patch Level 8, Compiled on Apr 17 2021 03:23:42
+ CPIC library: 753.2020.03.230 version 3, NI library: 40, Kernel Release: 753 Patch Level 814
+ Current working directory: D:\Google Drive - Office\PythonLab\ApiConsume, Program: python
+ Hardware: PC with Windows NT 8x AMD64 Level 6 (Mod 142 Step 12), Operating_system: Windows NT 10.0
+ Hostname: GRP-IT-SUHAIL1, IP address: 192.168.71.1, IPv6 address: fe80::7917:aeac:dd60:e4ca
+
+2021-12-20 12:50:31.437341 [17472] >> Error entry
+	[Handle: 1522363125472	ConvID: 	Target: 	SysID: 	SysNr: 	User: 	Codepage: 4103]
+	RfcCommunicationException: Return Value: 20, Code: RFC_COMMUNICATION_FAILURE, Message: 
+LOCATION    CPIC (TCP/IP) on local host GRP-IT-SUHAIL1 with Unicode
+ERROR       hostname '10.210.166.202:33015' unknown
+TIME        Mon Dec 20 12:50:31 2021
+RELEASE     753
+COMPONENT   NI (network interface)
+VERSION     40
+RC          -2
+MODULE      D:/depot/bas/753_REL/src/base/ni/nixxhl.cpp
+LINE        198
+DETAIL      NiHLGetNodeAddr: hostname cached as unknown
+COUNTER     5
+
+
+**** Log file opened at 2021-12-20 12:58:01.232968 UTC+05:00 (Pakistan Standard Time), Encoding UTF-8
+NW RFC Library: SDK variant, Release 750 Patch Level 8, Compiled on Apr 17 2021 03:23:42
+ CPIC library: 753.2020.03.230 version 3, NI library: 40, Kernel Release: 753 Patch Level 814
+ Current working directory: D:\Google Drive - Office\PythonLab\ApiConsume, Program: python
+ Hardware: PC with Windows NT 8x AMD64 Level 6 (Mod 142 Step 12), Operating_system: Windows NT 10.0
+ Hostname: GRP-IT-SUHAIL1, IP address: 192.168.71.1, IPv6 address: fe80::7917:aeac:dd60:e4ca
+
+2021-12-20 12:58:01.233111 [07200] >> Error entry
+	[Handle: 2658520059616	ConvID: 	Target: 	SysID: 	SysNr: 	User: 	Codepage: 4103]
+	RfcCommunicationException: Return Value: 20, Code: RFC_COMMUNICATION_FAILURE, Message: 
+LOCATION    CPIC (TCP/IP) on local host GRP-IT-SUHAIL1 with Unicode
+ERROR       hostname '10.210.166.202:33015' unknown
+TIME        Mon Dec 20 12:58:01 2021
+RELEASE     753
+COMPONENT   NI (network interface)
+VERSION     40
+RC          -2
+MODULE      D:/depot/bas/753_REL/src/base/ni/nixxhl.cpp
+LINE        198
+DETAIL      NiHLGetNodeAddr: hostname cached as unknown
+COUNTER     5
+
+
+**** Log file opened at 2021-12-20 13:06:49.189021 UTC+05:00 (Pakistan Standard Time), Encoding UTF-8
+NW RFC Library: SDK variant, Release 750 Patch Level 8, Compiled on Apr 17 2021 03:23:42
+ CPIC library: 753.2020.03.230 version 3, NI library: 40, Kernel Release: 753 Patch Level 814
+ Current working directory: D:\Google Drive - Office\PythonLab\ApiConsume, Program: python
+ Hardware: PC with Windows NT 8x AMD64 Level 6 (Mod 142 Step 12), Operating_system: Windows NT 10.0
+ Hostname: GRP-IT-SUHAIL1, IP address: 192.168.71.1, IPv6 address: fe80::7917:aeac:dd60:e4ca
+
+2021-12-20 13:06:49.189202 [13880] >> Error entry
+	[Handle: 1985492995808	ConvID: 	Target: 	SysID: 	SysNr: 	User: 	Codepage: 4103]
+	RfcCommunicationException: Return Value: 20, Code: RFC_COMMUNICATION_FAILURE, Message: 
+LOCATION    CPIC (TCP/IP) on local host GRP-IT-SUHAIL1 with Unicode
+ERROR       partner '10.210.166.202:3300' not reached
+TIME        Mon Dec 20 13:06:49 2021
+RELEASE     753
+COMPONENT   NI (network interface)
+VERSION     40
+RC          -10
+MODULE      D:/depot/bas/753_REL/src/base/ni/nixxi.cpp
+LINE        3449
+DETAIL      NiPConnect2: 10.210.166.202:3300
+SYSTEM CALL connect
+ERRNO       10061
+ERRNO TEXT  WSAECONNREFUSED: Connection refused
+COUNTER     2
+
+
+**** Log file opened at 2021-12-20 13:06:56.065789 UTC+05:00 (Pakistan Standard Time), Encoding UTF-8
+NW RFC Library: SDK variant, Release 750 Patch Level 8, Compiled on Apr 17 2021 03:23:42
+ CPIC library: 753.2020.03.230 version 3, NI library: 40, Kernel Release: 753 Patch Level 814
+ Current working directory: D:\Google Drive - Office\PythonLab\ApiConsume, Program: python
+ Hardware: PC with Windows NT 8x AMD64 Level 6 (Mod 142 Step 12), Operating_system: Windows NT 10.0
+ Hostname: GRP-IT-SUHAIL1, IP address: 192.168.71.1, IPv6 address: fe80::7917:aeac:dd60:e4ca
+
+2021-12-20 13:06:56.065954 [03124] >> Error entry
+	[Handle: 2300959510240	ConvID: 	Target: 	SysID: 	SysNr: 	User: 	Codepage: 4103]
+	RfcCommunicationException: Return Value: 20, Code: RFC_COMMUNICATION_FAILURE, Message: 
+LOCATION    CPIC (TCP/IP) on local host GRP-IT-SUHAIL1 with Unicode
+ERROR       partner '10.210.166.202:3300' not reached
+TIME        Mon Dec 20 13:06:56 2021
+RELEASE     753
+COMPONENT   NI (network interface)
+VERSION     40
+RC          -10
+MODULE      D:/depot/bas/753_REL/src/base/ni/nixxi.cpp
+LINE        3449
+DETAIL      NiPConnect2: 10.210.166.202:3300
+SYSTEM CALL connect
+ERRNO       10061
+ERRNO TEXT  WSAECONNREFUSED: Connection refused
+COUNTER     2
+
+
+**** Log file opened at 2021-12-20 13:09:00.855431 UTC+05:00 (Pakistan Standard Time), Encoding UTF-8
+NW RFC Library: SDK variant, Release 750 Patch Level 8, Compiled on Apr 17 2021 03:23:42
+ CPIC library: 753.2020.03.230 version 3, NI library: 40, Kernel Release: 753 Patch Level 814
+ Current working directory: D:\Google Drive - Office\PythonLab\ApiConsume, Program: python
+ Hardware: PC with Windows NT 8x AMD64 Level 6 (Mod 142 Step 12), Operating_system: Windows NT 10.0
+ Hostname: GRP-IT-SUHAIL1, IP address: 192.168.71.1, IPv6 address: fe80::7917:aeac:dd60:e4ca
+
+2021-12-20 13:09:00.855569 [19188] >> Error entry
+	[Handle: 1538240597728	ConvID: 	Target: 	SysID: 	SysNr: 	User: 	Codepage: 4103]
+	RfcCommunicationException: Return Value: 20, Code: RFC_COMMUNICATION_FAILURE, Message: 
+LOCATION    CPIC (TCP/IP) on local host GRP-IT-SUHAIL1 with Unicode
+ERROR       partner '10.210.166.202:3300' not reached
+TIME        Mon Dec 20 13:09:00 2021
+RELEASE     753
+COMPONENT   NI (network interface)
+VERSION     40
+RC          -10
+MODULE      D:/depot/bas/753_REL/src/base/ni/nixxi.cpp
+LINE        3449
+DETAIL      NiPConnect2: 10.210.166.202:3300
+SYSTEM CALL connect
+ERRNO       10061
+ERRNO TEXT  WSAECONNREFUSED: Connection refused
+COUNTER     2
+
+
+**** Log file opened at 2021-12-20 13:52:55.014803 UTC+05:00 (Pakistan Standard Time), Encoding UTF-8
+NW RFC Library: SDK variant, Release 750 Patch Level 8, Compiled on Apr 17 2021 03:23:42
+ CPIC library: 753.2020.03.230 version 3, NI library: 40, Kernel Release: 753 Patch Level 814
+ Current working directory: D:\Google Drive - Office\PythonLab\ApiConsume, Program: python
+ Hardware: PC with Windows NT 8x AMD64 Level 6 (Mod 142 Step 12), Operating_system: Windows NT 10.0
+ Hostname: GRP-IT-SUHAIL1, IP address: 192.168.71.1, IPv6 address: fe80::7917:aeac:dd60:e4ca
+
+2021-12-20 13:52:55.015027 [19488] >> Error entry
+	[Handle: 1925613539040	ConvID: 	Target: 	SysID: 	SysNr: 	User: 	Codepage: 4103]
+	RfcCommunicationException: Return Value: 20, Code: RFC_COMMUNICATION_FAILURE, Message: 
+LOCATION    CPIC (TCP/IP) on local host GRP-IT-SUHAIL1 with Unicode
+ERROR       partner '10.210.166.202:3300' not reached
+TIME        Mon Dec 20 13:52:55 2021
+RELEASE     753
+COMPONENT   NI (network interface)
+VERSION     40
+RC          -10
+MODULE      D:/depot/bas/753_REL/src/base/ni/nixxi.cpp
+LINE        3449
+DETAIL      NiPConnect2: 10.210.166.202:3300
+SYSTEM CALL connect
+ERRNO       10061
+ERRNO TEXT  WSAECONNREFUSED: Connection refused
+COUNTER     2
+
+
+**** Log file opened at 2021-12-20 13:55:45.606594 UTC+05:00 (Pakistan Standard Time), Encoding UTF-8
+NW RFC Library: SDK variant, Release 750 Patch Level 8, Compiled on Apr 17 2021 03:23:42
+ CPIC library: 753.2020.03.230 version 3, NI library: 40, Kernel Release: 753 Patch Level 814
+ Current working directory: D:\Google Drive - Office\PythonLab\ApiConsume, Program: python
+ Hardware: PC with Windows NT 8x AMD64 Level 6 (Mod 142 Step 12), Operating_system: Windows NT 10.0
+ Hostname: GRP-IT-SUHAIL1, IP address: 192.168.71.1, IPv6 address: fe80::7917:aeac:dd60:e4ca
+
+2021-12-20 13:55:45.606822 [15568] >> Error entry
+	[Handle: 1856392318688	ConvID: 04981353	Target: iblerpqas	SysID: IEQ	SysNr: 21	User: INTGUSER	Mandant: 590	Language: 	Codepage: 4103]
+	RfcSystemException: Key: RFC_NO_AUTHORITY, Code: RFC_ABAP_RUNTIME_FAILURE, Message: No RFC authorization for function module RFCPING.
+
+**** Log file opened at 2021-12-20 14:15:55.911039 UTC+05:00 (Pakistan Standard Time), Encoding UTF-8
+NW RFC Library: SDK variant, Release 750 Patch Level 8, Compiled on Apr 17 2021 03:23:42
+ CPIC library: 753.2020.03.230 version 3, NI library: 40, Kernel Release: 753 Patch Level 814
+ Current working directory: D:\Google Drive - Office\PythonLab\ApiConsume, Program: python
+ Hardware: PC with Windows NT 8x AMD64 Level 6 (Mod 142 Step 12), Operating_system: Windows NT 10.0
+ Hostname: GRP-IT-SUHAIL1, IP address: 192.168.71.1, IPv6 address: fe80::7917:aeac:dd60:e4ca
+
+2021-12-20 14:15:55.911182 [17276] >> Error entry
+	[Handle: 2914981105376	ConvID: 	Target: 	SysID: 	SysNr: 	User: 	Codepage: 4103]
+	RfcCommunicationException: Return Value: 20, Code: RFC_COMMUNICATION_FAILURE, Message: 
+LOCATION    CPIC (TCP/IP) on local host GRP-IT-SUHAIL1 with Unicode
+ERROR       partner '10.210.150.201:3321' not reached
+TIME        Mon Dec 20 14:15:55 2021
+RELEASE     753
+COMPONENT   NI (network interface)
+VERSION     40
+RC          -10
+MODULE      D:/depot/bas/753_REL/src/base/ni/nixxi.cpp
+LINE        3449
+DETAIL      NiPConnect2: 10.210.150.201:3321
+SYSTEM CALL connect
+ERRNO       10061
+ERRNO TEXT  WSAECONNREFUSED: Connection refused
+COUNTER     2
+
+
+**** Log file opened at 2021-12-20 16:12:40.335421 UTC+05:00 (Pakistan Standard Time), Encoding UTF-8
+NW RFC Library: SDK variant, Release 750 Patch Level 8, Compiled on Apr 17 2021 03:23:42
+ CPIC library: 753.2020.03.230 version 3, NI library: 40, Kernel Release: 753 Patch Level 814
+ Current working directory: D:\Google Drive - Office\PythonLab\ApiConsume, Program: python
+ Hardware: PC with Windows NT 8x AMD64 Level 6 (Mod 142 Step 12), Operating_system: Windows NT 10.0
+ Hostname: GRP-IT-SUHAIL1, IP address: 192.168.71.1, IPv6 address: fe80::7917:aeac:dd60:e4ca
+
+2021-12-20 16:12:40.335579 [11972] >> Error entry
+	[Handle: 2798059441888	ConvID: 	Target: 	SysID: 	SysNr: 	User: 	Codepage: 4103]
+	RfcCommunicationException: Return Value: 20, Code: RFC_COMMUNICATION_FAILURE, Message: 
+LOCATION    CPIC (TCP/IP) on local host GRP-IT-SUHAIL1 with Unicode
+ERROR       partner '10.210.150.201:3321' not reached
+TIME        Mon Dec 20 16:12:40 2021
+RELEASE     753
+COMPONENT   NI (network interface)
+VERSION     40
+RC          -10
+MODULE      D:/depot/bas/753_REL/src/base/ni/nixxi.cpp
+LINE        3449
+DETAIL      NiPConnect2: 10.210.150.201:3321
+SYSTEM CALL connect
+ERRNO       10061
+ERRNO TEXT  WSAECONNREFUSED: Connection refused
+COUNTER     2
+
+
+**** Log file opened at 2021-12-20 16:13:22.593716 UTC+05:00 (Pakistan Standard Time), Encoding UTF-8
+NW RFC Library: SDK variant, Release 750 Patch Level 8, Compiled on Apr 17 2021 03:23:42
+ CPIC library: 753.2020.03.230 version 3, NI library: 40, Kernel Release: 753 Patch Level 814
+ Current working directory: D:\Google Drive - Office\PythonLab\ApiConsume, Program: python
+ Hardware: PC with Windows NT 8x AMD64 Level 6 (Mod 142 Step 12), Operating_system: Windows NT 10.0
+ Hostname: GRP-IT-SUHAIL1, IP address: 192.168.71.1, IPv6 address: fe80::7917:aeac:dd60:e4ca
+
+2021-12-20 16:13:22.593850 [19328] >> Error entry
+	[Handle: 2364867399392	ConvID: 32433368	Target: iblerpdev	SysID: IED	SysNr: 11	User: INTGUSER	Mandant: 590	Language: 	Codepage: 4103]
+	RfcABAPMessageException: Key: , Code: RFC_ABAP_MESSAGE, Message: Client 590 is not available in this system
+
+**** Log file opened at 2021-12-20 17:00:45.484373 UTC+05:00 (Pakistan Standard Time), Encoding UTF-8
+NW RFC Library: SDK variant, Release 750 Patch Level 8, Compiled on Apr 17 2021 03:23:42
+ CPIC library: 753.2020.03.230 version 3, NI library: 40, Kernel Release: 753 Patch Level 814
+ Current working directory: D:\Google Drive - Office\PythonLab\ApiConsume, Program: python
+ Hardware: PC with Windows NT 8x AMD64 Level 6 (Mod 142 Step 12), Operating_system: Windows NT 10.0
+ Hostname: GRP-IT-SUHAIL1, IP address: 192.168.71.1, IPv6 address: fe80::7917:aeac:dd60:e4ca
+
+2021-12-20 17:00:45.484584 [16308] >> Error entry
+	[Handle: 2093946949312	ConvID: 34373173	Target: iblerpdev	SysID: IED	SysNr: 11	User: INTGUSER	Mandant: 150	Language: E	Codepage: 4103]
+	RfcSystemException: Key: RFC_NO_AUTHORITY, Code: RFC_ABAP_RUNTIME_FAILURE, Message: No RFC authorization for function module RFC_GET_FUNCTION_INTERFACE.
+
+**** Log file opened at 2021-12-21 10:05:53.573899 UTC+05:00 (Pakistan Standard Time), Encoding UTF-8
+NW RFC Library: SDK variant, Release 750 Patch Level 8, Compiled on Apr 17 2021 03:23:42
+ CPIC library: 753.2020.03.230 version 3, NI library: 40, Kernel Release: 753 Patch Level 814
+ Current working directory: D:\Google Drive - Office\PythonLab\ApiConsume, Program: python
+ Hardware: PC with Windows NT 8x AMD64 Level 6 (Mod 142 Step 12), Operating_system: Windows NT 10.0
+ Hostname: GRP-IT-SUHAIL1, IP address: 192.168.71.1, IPv6 address: fe80::7917:aeac:dd60:e4ca
+
+2021-12-21 10:05:53.574766 [14068] >> Error entry
+	[Handle: 2165432123744	ConvID: 96799247	Target: iblerpdev	SysID: IED	SysNr: 11	User: INTGUSER	Mandant: 150	Language: E	Codepage: 4103]
+	RfcSystemException: Key: RFC_NO_AUTHORITY, Code: RFC_ABAP_RUNTIME_FAILURE, Message: No RFC authorization for function module RFC_GET_FUNCTION_INTERFACE.
+
+**** Log file opened at 2021-12-21 10:07:20.587766 UTC+05:00 (Pakistan Standard Time), Encoding UTF-8
+NW RFC Library: SDK variant, Release 750 Patch Level 8, Compiled on Apr 17 2021 03:23:42
+ CPIC library: 753.2020.03.230 version 3, NI library: 40, Kernel Release: 753 Patch Level 814
+ Current working directory: D:\Google Drive - Office\PythonLab\ApiConsume, Program: python
+ Hardware: PC with Windows NT 8x AMD64 Level 6 (Mod 142 Step 12), Operating_system: Windows NT 10.0
+ Hostname: GRP-IT-SUHAIL1, IP address: 192.168.71.1, IPv6 address: fe80::7917:aeac:dd60:e4ca
+
+2021-12-21 10:07:20.589100 [02348] >> Error entry
+	[Handle: 2424079778144	ConvID: 96887265	Target: iblerpdev	SysID: IED	SysNr: 11	User: INTGUSER	Mandant: 150	Language: E	Codepage: 4103]
+	RfcSystemException: Key: RFC_NO_AUTHORITY, Code: RFC_ABAP_RUNTIME_FAILURE, Message: No RFC authorization for function module RFC_GET_FUNCTION_INTERFACE.
+
+**** Log file opened at 2021-12-21 10:08:08.708612 UTC+05:00 (Pakistan Standard Time), Encoding UTF-8
+NW RFC Library: SDK variant, Release 750 Patch Level 8, Compiled on Apr 17 2021 03:23:42
+ CPIC library: 753.2020.03.230 version 3, NI library: 40, Kernel Release: 753 Patch Level 814
+ Current working directory: D:\Google Drive - Office\PythonLab\ApiConsume, Program: python
+ Hardware: PC with Windows NT 8x AMD64 Level 6 (Mod 142 Step 12), Operating_system: Windows NT 10.0
+ Hostname: GRP-IT-SUHAIL1, IP address: 192.168.71.1, IPv6 address: fe80::7917:aeac:dd60:e4ca
+
+2021-12-21 10:08:08.708751 [14272] >> Error entry
+	[Handle: 1983858737504	ConvID: 96936378	Target: iblerpdev	SysID: IED	SysNr: 11	User: INTGUSER	Mandant: 150	Language: E	Codepage: 4103]
+	RfcSystemException: Key: RFC_NO_AUTHORITY, Code: RFC_ABAP_RUNTIME_FAILURE, Message: No RFC authorization for function module RFC_GET_FUNCTION_INTERFACE.
+
+**** Log file opened at 2021-12-21 10:22:47.526157 UTC+05:00 (Pakistan Standard Time), Encoding UTF-8
+NW RFC Library: SDK variant, Release 750 Patch Level 8, Compiled on Apr 17 2021 03:23:42
+ CPIC library: 753.2020.03.230 version 3, NI library: 40, Kernel Release: 753 Patch Level 814
+ Current working directory: D:\Google Drive - Office\PythonLab\ApiConsume, Program: python
+ Hardware: PC with Windows NT 8x AMD64 Level 6 (Mod 142 Step 12), Operating_system: Windows NT 10.0
+ Hostname: GRP-IT-SUHAIL1, IP address: 192.168.71.1, IPv6 address: fe80::7917:aeac:dd60:e4ca
+
+2021-12-21 10:22:47.526298 [18912] >> Error entry
+	[Handle: 2608084681056	ConvID: 96831210	Target: iblerpdev	SysID: IED	SysNr: 11	User: INTGUSER	Mandant: 150	Language: E	Codepage: 4103]
+	RfcSystemException: Key: RFC_NO_AUTHORITY, Code: RFC_ABAP_RUNTIME_FAILURE, Message: No RFC authorization for function module RFC_GET_FUNCTION_INTERFACE.
+
+**** Log file opened at 2021-12-21 11:23:47.221884 UTC+05:00 (Pakistan Standard Time), Encoding UTF-8
+NW RFC Library: SDK variant, Release 750 Patch Level 8, Compiled on Apr 17 2021 03:23:42
+ CPIC library: 753.2020.03.230 version 3, NI library: 40, Kernel Release: 753 Patch Level 814
+ Current working directory: D:\Google Drive - Office\PythonLab\ApiConsume, Program: python
+ Hardware: PC with Windows NT 8x AMD64 Level 6 (Mod 142 Step 12), Operating_system: Windows NT 10.0
+ Hostname: GRP-IT-SUHAIL1, IP address: 192.168.71.1, IPv6 address: fe80::7917:aeac:dd60:e4ca
+
+2021-12-21 11:23:47.222028 [16868] >> Error entry
+	[Handle: 1478133088608	ConvID: 00551896	Target: iblerpdev	SysID: IED	SysNr: 11	User: INTGUSER	Mandant: 150	Language: E	Codepage: 4103]
+	RfcSystemException: Key: RFC_NO_AUTHORITY, Code: RFC_ABAP_RUNTIME_FAILURE, Message: No RFC authorization for function module RFC_GET_FUNCTION_INTERFACE.
+
+**** Log file opened at 2021-12-21 12:03:41.020100 UTC+05:00 (Pakistan Standard Time), Encoding UTF-8
+NW RFC Library: SDK variant, Release 750 Patch Level 8, Compiled on Apr 17 2021 03:23:42
+ CPIC library: 753.2020.03.230 version 3, NI library: 40, Kernel Release: 753 Patch Level 814
+ Current working directory: D:\Google Drive - Office\PythonLab\ApiConsume, Program: python
+ Hardware: PC with Windows NT 8x AMD64 Level 6 (Mod 142 Step 12), Operating_system: Windows NT 10.0
+ Hostname: GRP-IT-SUHAIL1, IP address: 192.168.71.1, IPv6 address: fe80::7917:aeac:dd60:e4ca
+
+2021-12-21 12:03:41.020419 [14908] >> Error entry
+	[Handle: 2046967546208	ConvID: 03012582	Target: iblerpdev	SysID: IED	SysNr: 11	User: INTGUSER	Mandant: 150	Language: E	Codepage: 4103]
+	An exception occurred during DDIC query for parameter ZEMP_INFO [RFC_NO_AUTHORITY:No RFC authorization for function module DDIF_FIELDINFO_GET.]

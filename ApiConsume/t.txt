@@ -1,0 +1,1 @@
+Connection :  <pyrfc.pyrfc.Connection object at 0x0000025F3D900880>
