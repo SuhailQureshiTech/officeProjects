@@ -1,0 +1,1 @@
+{"resources":{"Scripts/SalesData.sql":{"default-schema":"ETL","default-datasource":"sap_hana-18acb192c97-32fd8cdb544af850"},"Scripts/SalesView.sql":{"default-datasource":"sap_hana-18acb192c97-32fd8cdb544af850","default-schema":"ETL"}}}
