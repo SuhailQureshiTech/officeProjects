@@ -95,7 +95,7 @@ def FranchiseAlchmy():
 
     # engine = create_engine('postgresql+psycopg2://user:password@hostname/database_name')
 
-    host = '34.65.6.130'
+    host = '35.216.155.219'
     db = 'franchise_db'
     user = 'franchise'
     password = 'franchisePassword!123!456'

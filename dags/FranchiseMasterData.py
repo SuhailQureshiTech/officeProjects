@@ -164,15 +164,17 @@ def users():
     userQuery=f'''SELECT 
                     id,company_code,email,distributor_id,username,"password",created_at
                     ,status,store_name,role_id,cast(location_id as text) location_id
-                    FROM test_schema.users x
+                    FROM users x
     '''
     df=pd.read_sql(userQuery,con=postgresEngine)
 
     df.columns = df.columns.str.strip()
-    df['created_at'] = pd.to_datetime(df['created_at'])
-    df['role_id'] = df['role_id'].astype(pd.StringDtype())
-    df['location_id'] = df['location_id'].astype(pd.StringDtype())
-    df['id'] = df['id'].astype(pd.StringDtype())
+
+    df['id']=df['id'].astype('int')
+    df['role_id']=df['role_id'].astype('int')
+    df['location_id'].fillna(0,inplace=True)
+    df['location_id']=df['location_id'].astype('int')
+    df['created_at'] = pd.to_datetime(df['created_at'])   
     df['transfer_date'] = creationDate
 
     # for char in spec_chars:
@@ -185,16 +187,15 @@ def users():
     df1=pd.read_parquet('users.parquet')
 
     credentials = service_account.Credentials.from_service_account_file(
-        '/home/airflow/airflow/data-light-house-prod.json'
-        )
+        '/home/airflow/airflow/data-light-house-prod.json')
 
     project_id = 'data-light-house-prod'
     client=bigquery.Client(credentials=credentials,project=project_id)
 
     job_config = bigquery.LoadJobConfig(
         write_disposition=bigquery.WriteDisposition.WRITE_TRUNCATE,
-        source_format=bigquery.SourceFormat.PARQUET,
-    )
+        source_format=bigquery.SourceFormat.PARQUET
+        )
 
     filePath = "users.parquet"
     with open(filePath,"rb") as source_file:
@@ -220,14 +221,13 @@ def locations():
     df=pd.DataFrame()
     locationQuery=f'''SELECT 
                     location_id,location_name,branch_code
-                    FROM test_schema.locations 
+                    FROM locations 
                 '''
         
     df=pd.read_sql(locationQuery,con=postgresEngine)
-
     df.columns = df.columns.str.strip()
     
-    df['location_id'] = df['location_id'].astype(pd.StringDtype())
+    df['location_id'] = df['location_id'].astype('int')
     df['location_name'] = df['location_name'].astype(pd.StringDtype())
     df['transfer_date'] = creationDate
 
@@ -269,15 +269,13 @@ def roles():
     table_id = 'data-light-house-prod.EDW.franchise_roles'
     df=pd.DataFrame()
     locationQuery=f'''SELECT 
-                    id,roles_name
-                    FROM test_schema.roles
-                '''
+                    id,roles_name      FROM roles
+                        '''
         
     df=pd.read_sql(locationQuery,con=postgresEngine)
-
     df.columns = df.columns.str.strip()
     
-    df['id'] = df['id'].astype(pd.StringDtype())
+    df['id'] = df['id'].astype('int')
     df['roles_name'] = df['roles_name'].astype(pd.StringDtype())
     df['transfer_date'] = creationDate
 
@@ -312,7 +310,6 @@ syncRolesData=PythonOperator(
                                     ,dag=franchise_master_data
                                   )
 
-
 def deleteParquetFiles():
     dir = "./"
     filelist = glob.glob(os.path.join(dir, "*.parquet"))
@@ -325,5 +322,9 @@ delParquetFiles=PythonOperator(
                                     ,dag=franchise_master_data
                                   )
 
+# testing functions
+# users()
+# locations()
+# roles()
 
 [syncUsersData,syncLocationsData,syncRolesData]>>delParquetFiles
