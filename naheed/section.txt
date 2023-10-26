@@ -1,0 +1,83 @@
+https://store.spar.pk/catalog/groceries/laundry-household?id=39546
+
+gr
+AttributeError: 'NoneType' object has no attribute 'text'
+product_price= product.find('span',class_="old_price").text.replace('  ','')
+    product_info = {
+        'Product_Name':product_name,
+        'Product_Price':product_price,
+        'Date': date.today(),
+        'Category': 'FOOD CUPBOARD'
+        }
+    productss.append( product_info)
+
+        
+Frozen   
+https://store.spar.pk/catalog/groceries/food-staples?id=39541&sub_cat_section_id=41176
+Saurces & Pickles
+https://store.spar.pk/catalog/groceries/food-staples?id=39541&sub_cat_section_id=41177
+Noodles & Pasta
+https://store.spar.pk/catalog/groceries/food-staples?id=39541&sub_cat_section_id=41180
+Canned & Jarred Food
+https://store.spar.pk/catalog/groceries/food-staples?id=39541&sub_cat_section_id=41179
+Rice
+https://store.spar.pk/catalog/groceries/food-staples?id=39541&sub_cat_section_id=41188
+Flour
+https://store.spar.pk/catalog/groceries/food-staples?id=39541&sub_cat_section_id=41185
+Herbs & Spices
+https://store.spar.pk/catalog/groceries/food-staples?id=39541&sub_cat_section_id=41178
+Sugar, Sweetner & Salt
+https://store.spar.pk/catalog/groceries/food-staples?id=39541&sub_cat_section_id=41181
+Beans & Pulses
+https://store.spar.pk/catalog/groceries/food-staples?id=39541&sub_cat_section_id=41182
+Soups & Stocks
+https://store.spar.pk/catalog/groceries/food-staples?id=39541&sub_cat_section_id=41183
+Baking
+https://store.spar.pk/catalog/groceries/food-staples?id=39541&sub_cat_section_id=41184
+Olive Oil
+https://store.spar.pk/catalog/groceries/food-staples?id=39541&sub_cat_section_id=41187
+Cooking Oil & Ghee
+https://store.spar.pk/catalog/groceries/food-staples?id=39541&sub_cat_section_id=41186
+
+
+
+https://store.spar.pk/catalog/groceries/laundry-household?id=39546
+
+gr
+AttributeError: 'NoneType' object has no attribute 'text'
+product_price= product.find('span',class_="old_price").text.replace('  ','')
+    product_info = {
+        'Product_Name':product_name,
+        'Product_Price':product_price,
+        'Date': date.today(),
+        'Category': 'FOOD CUPBOARD'
+        }
+    productss.append( product_info)
+
+        
+Frozen   
+https://store.spar.pk/catalog/groceries/food-staples?id=39541&sub_cat_section_id=41176
+Saurces & Pickles
+https://store.spar.pk/catalog/groceries/food-staples?id=39541&sub_cat_section_id=41177
+Herbs & Spices
+https://store.spar.pk/catalog/groceries/food-staples?id=39541&sub_cat_section_id=41178
+Canned & Jarred Food
+https://store.spar.pk/catalog/groceries/food-staples?id=39541&sub_cat_section_id=41179
+Noodles & Pasta
+https://store.spar.pk/catalog/groceries/food-staples?id=39541&sub_cat_section_id=41180
+Sugar, Sweetner & Salt
+https://store.spar.pk/catalog/groceries/food-staples?id=39541&sub_cat_section_id=41181
+Beans & Pulses
+https://store.spar.pk/catalog/groceries/food-staples?id=39541&sub_cat_section_id=41182
+Soups & Stocks
+https://store.spar.pk/catalog/groceries/food-staples?id=39541&sub_cat_section_id=41183
+Baking
+https://store.spar.pk/catalog/groceries/food-staples?id=39541&sub_cat_section_id=41184
+Flour
+https://store.spar.pk/catalog/groceries/food-staples?id=39541&sub_cat_section_id=41185
+Cooking Oil & Ghee
+https://store.spar.pk/catalog/groceries/food-staples?id=39541&sub_cat_section_id=41186
+Olive Oil
+https://store.spar.pk/catalog/groceries/food-staples?id=39541&sub_cat_section_id=41187
+Rice
+https://store.spar.pk/catalog/groceries/food-staples?id=39541&sub_cat_section_id=41188
