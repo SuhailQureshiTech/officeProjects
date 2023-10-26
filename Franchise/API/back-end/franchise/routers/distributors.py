@@ -521,7 +521,6 @@ async def upload_stock_file(company_code, user_id, stockFiles: UploadFile = File
     print(dateLIst)
 
     d_list_string ="'"+"','".join(dateLIst)+"'"
-    # delete_query = "delete from franchise_sales_1 where franchise_customer_invoice_date in (" +d_list_string+")"+" and franchise_code="+"'"+str(user_id)+"'"
     delete_query = "delete from franchise_stock where 1=1 and dated in (" +d_list_string+")"+" and ibl_distributor_code="+"'"+str(user_id)+"'"
     print(delete_query)
 
@@ -536,8 +535,6 @@ async def upload_stock_file(company_code, user_id, stockFiles: UploadFile = File
                   ,'purchase_unit']
 
     df['company_code'] = company_code
-
-
 
     df.to_sql('franchise_stock', schema="franchise",
               if_exists='append', con=conn, index=False)
