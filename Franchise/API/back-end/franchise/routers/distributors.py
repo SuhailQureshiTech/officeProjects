@@ -24,12 +24,6 @@ router = APIRouter(
 )
 
 conn_string =  'postgresql://franchise:franchisePassword!123!456@35.216.155.219:5432/franchise_db'
-
-# url = f"http://34.65.6.130:9000/Full_Load_IBL_PRODUCTS?apikeyCode=iblykgiOBb2K7O3DIrxfgFpCyQTEHuUKxAR5r6cJ79JEZFhqEbCnmPQTA95Lyjup"
-# product_response = requests.get(url)
-# product_df = pd.json_normalize(product_response.json())
-# product_id = product_df['item_code']
-
 today = date.today()
 
 @router.post('/uploadSalesData/{company_code}/{user_id}', status_code=status.HTTP_201_CREATED)
@@ -37,10 +31,7 @@ async def upload_sales_file(company_code, user_id, files: UploadFile = File(...)
     df = pd.read_excel(BytesIO(files.file.read()), sheet_name="Sales")
     
     df.columns = df.columns.str.strip()
-
     def checkColumnsinFile():
-        # print(df.info())
-
         if len(df.columns) > 26:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                     detail="File columns shout not less or more than 26 columns")
@@ -151,8 +142,6 @@ async def upload_sales_file(company_code, user_id, files: UploadFile = File(...)
                     detail="Brick Name column not found in Sales sheet")
         
     def validateData():
-    #   start
-
         try:    
             df['Franchise Customer Invoice Date'] = pd.to_datetime(df['Franchise Customer Invoice Date'])            
         except Exception as  ex:            
@@ -289,20 +278,11 @@ async def upload_sales_file(company_code, user_id, files: UploadFile = File(...)
         if df['DISCOUNTED_RATE'].dtypes != int64:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                      detail="DISCOUNTED_RATE should contain integer values and must not null")                
-
-    # end...      
-
     checkColumnsinFile()
     validateData()
 
     db = create_engine(conn_string)
     conn = db.connect()
-
-    # get_list_invoice_date = pd.read_sql_query(
-    #     f'''
-    #     select distinct franchise_customer_invoice_date invoice_date 
-    #     from franchise."franchise_sales_1" 
-    #     where franchise_code='{user_id}' ''', con=conn)
 
     print('dates', df['Franchise Customer Invoice Date'].unique())
 
@@ -337,9 +317,6 @@ async def upload_sales_file(company_code, user_id, files: UploadFile = File(...)
     df['company_code'] = company_code
     df['created_date'] = today
 
-    # df['discount'] = df['discount'].replace(NaN, 0)
-    # df['bonus_qty'] = df['bonus_qty'].replace(NaN, 0)
-
     start_time = time.time()
     print('df records')
     print(df)
@@ -350,9 +327,6 @@ async def upload_sales_file(company_code, user_id, files: UploadFile = File(...)
         print("Data insertion was successful.")
     else:
         print("Data insertion failed.")
-
-    # pg_conn_sales = psycopg2.connect(conn_string)
-    # pg_conn_sales.commit()
 
     total_sales_quantity = df['quantity_sold'].sum()
     total_sales_gross_amount = df['gross_amount'].sum()
@@ -503,9 +477,6 @@ async def upload_stock_file(company_code, user_id, stockFiles: UploadFile = File
     checkColumnsinFile()
     validateData()
 
-    # print('stock')
-    # print(df.info())
-
     db = create_engine(conn_string)
     conn = db.connect()
 
@@ -524,11 +495,6 @@ async def upload_stock_file(company_code, user_id, stockFiles: UploadFile = File
     delete_query = "delete from franchise_stock where 1=1 and dated in (" +d_list_string+")"+" and ibl_distributor_code="+"'"+str(user_id)+"'"
     print(delete_query)
 
-    # result = conn.execute(delete_query)
-    # rowCounts=result.rowcount
-    # print(f''' delte row count {rowCounts}   ''')
-
-
     df.columns = ['ibl_distributor_code','ibl_branch_code', 'distributor_item_code', 'ibl_item_code',
                   'distributor_item_description'
                   , 'lot_number', 'expiry_date', 'stock_qty', 'stock_value', 'dated','price','in_transit_stock'
@@ -539,10 +505,6 @@ async def upload_stock_file(company_code, user_id, stockFiles: UploadFile = File
     df.to_sql('franchise_stock', schema="franchise",
               if_exists='append', con=conn, index=False)
     
-    # # conn.commit()
-
-    # pg_conn = psycopg2.connect(conn_string)
-    # pg_conn.commit()
     # # print("to_sql duration: {} seconds".format(time.time() - start_time))
 
     # total_quantity = df['stock_qty'].sum()
@@ -556,10 +518,7 @@ async def upload_stock_file(company_code, user_id, stockFiles: UploadFile = File
     #     "Total_rows": int(total_rows)
     # }
 
-
 # test Case new format sale
-# @router.post('/uploadSalesDataFormat/{company_code}/{user_id})', status_code=status.HTTP_201_CREATED)
-
 @router.post('/uploadSalesDataFormat/{company_code})', status_code=status.HTTP_201_CREATED)
 # async def upload_sales_file_new(company_code, user_id, files: UploadFile = File(...)):
 async def upload_sales_file_new(company_code,  files: UploadFile = File(...)):
@@ -663,8 +622,6 @@ async def upload_sales_file_new(company_code,  files: UploadFile = File(...)):
               , index=False
               )
     
-
-
 @router.get('/getSalesDistributorStatus/{current_date}', status_code=status.HTTP_200_OK)
 async def get_distributor_status(current_date, db: Session = Depends(database.get_db)):
     b = "'"+str(current_date)+"'"
@@ -695,7 +652,6 @@ async def get_distributor_status(current_date, db: Session = Depends(database.ge
     # return df_sales.to_json(orient='records')
     return df_sales.to_dict(orient='records')
 
-
 @router.get('/getStatusSales/{userId}/{from_date}/{to_date}', status_code=status.HTTP_200_OK)
 def get_status(userId, from_date, to_date, db: Session = Depends(database.get_db)):
     db = create_engine(conn_string)
@@ -708,7 +664,6 @@ def get_status(userId, from_date, to_date, db: Session = Depends(database.get_db
     print(read_sales)
     return read_sales.to_dict(orient='records')
 
-
 @router.get('/getStatusStock/{userId}/{from_date}/{to_date}', status_code=status.HTTP_200_OK)
 def get_status(userId, from_date, to_date, db: Session = Depends(database.get_db)):
     db = create_engine(conn_string)
@@ -720,7 +675,6 @@ def get_status(userId, from_date, to_date, db: Session = Depends(database.get_db
     )
     print(read_stock)
     return read_stock.to_dict(orient='records')
-
 
 @router.get('/getStatusSalesByInvoiceDate/{userId}/{from_date}/{to_date}', status_code=status.HTTP_200_OK)
 def get_status(userId, from_date, to_date, db: Session = Depends(database.get_db)):
@@ -748,7 +702,6 @@ def get_status(userId, from_date, to_date, db: Session = Depends(database.get_db
         np.nan, 'null')
     return read_status_by_invoice_id.to_dict(orient="records")
 
-
 @router.get('/fetchDistributorIdAndLocation', status_code=status.HTTP_200_OK)
 def get_status(db: Session = Depends(database.get_db)):
     db = create_engine(conn_string)
@@ -759,7 +712,6 @@ def get_status(db: Session = Depends(database.get_db)):
     # read_status_by_invoice_id['total_gross_amount'] = read_status_by_invoice_id['total_gross_amount'].replace(
     # np.nan, 'null')
     return fetchDistributorIdAndLocation.to_dict(orient="records")
-
 
 @router.get('/getStatusSalesForAllDistributors/{from_date}/{to_date}', status_code=status.HTTP_200_OK)
 def get_status_sales_all_distributors(from_date, to_date, db: Session = Depends(database.get_db)):
