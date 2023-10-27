@@ -1,0 +1,26 @@
+SELECT
+  institution,
+  branch_id,
+  branch_name,
+  distributor,
+  ins_type,
+  item_code,
+  sku,
+  selling_price,
+  claimable_discount,
+  un_claimable_discount,
+  inst_discount,
+  month,
+  order_ref_no,
+  date_of_order,
+  order_quantity,
+  foc,
+  total_qty,
+  sales_vlaue,
+  NULL net_sale_value,
+  invoice_date_ibl,
+  invoice_no_ibl,
+  tax_recoverable,
+  customer_trx_id
+FROM
+  data-light-house-prod.EDW.EBS_INVOICE_ORDER_VW ;
