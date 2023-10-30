@@ -86,6 +86,19 @@ def markittSqlServerAlchmy():
     engine = sqlalchemy.create_engine(connect_string)
     return engine
 
+def oracleIblGrpHcmAlchmy():
+    DIALECT = 'oracle'
+    SQL_DRIVER = 'cx_oracle'
+    USERNAME = 'IBLGRPHCM' #enter your username
+    PASSWORD = 'iblgrp106hcm' #enter your password
+    HOST = 'Sap-Router-e416ea262b67e5f4.elb.ap-southeast-1.amazonaws.com' #enter the oracle db host url
+    PORT = 6464 # enter the oracle port number
+    SERVICE = 'cdb1' # enter the oracle db service name
+    ENGINE_PATH_WIN_AUTH = DIALECT + '+' + SQL_DRIVER + '://' + USERNAME + ':' + PASSWORD +'@' + HOST + ':' + str(PORT) + '/?service_name=' + SERVICE
+
+    engine = create_engine(ENGINE_PATH_WIN_AUTH)
+    return engine
+
 def oracleIlgrpHcm():
     oracleConnectionDB = xo.connect('IBLGRPHCM', 'iblgrp106hcm',
                         xo.makedsn('Sap-Router-e416ea262b67e5f4.elb.ap-southeast-1.amazonaws.com', 6464, 'cdb1'))
@@ -95,7 +108,7 @@ def FranchiseAlchmy():
 
     # engine = create_engine('postgresql+psycopg2://user:password@hostname/database_name')
 
-    host = '34.65.6.130'
+    host = '35.216.155.219'
     db = 'franchise_db'
     user = 'franchise'
     password = 'franchisePassword!123!456'
