@@ -622,7 +622,9 @@ async def upload_sales_file_new(company_code,  files: UploadFile = File(...)):
               , con=conn
               , index=False
               )
-    
+
+# Reports...
+
 @router.get('/getSalesDistributorStatus/{current_date}', status_code=status.HTTP_200_OK)
 async def get_distributor_status(current_date, db: Session = Depends(database.get_db)):
     b = "'"+str(current_date)+"'"
