@@ -135,7 +135,9 @@ current_time = now.time()
 print('else : from date :', vStartDate)
 print('else : enmd date :', vEndDate)
 
-print('else : from date :', vStartDate.strftime('%d-%b-%Y'))
+v=vStartDate
+
+print('else : from date :', v.strftime('%d-%b-%Y'))
 
 
 
@@ -179,20 +181,20 @@ franchise_sale_merging = DAG(
 )
 
 
-def delRecords():
+def delRecords():  
 
-    oracleTable='test_ebs_order'
+    oracleTable='esb_invoice_order'
     delQuery=f''' 
                 delete from {oracleTable} 
-                    where 1=1 and invoice_date_ibl between '01-jul-23' and '31-jul-23'
+                    where 1=1 and invoice_date_ibl between '01-Aug-23' and '30-Sep-23'
             '''
 
     oracleAlchemy.execute(delQuery)
     print('done.....................')
 
 def getEbsInvoiceOrderDataDfSql():
-
-    oracleTable='test_ebs_order'
+    
+    oracleTable='esb_invoice_order'
 
     sqlData=f'''SELECT
                 institution,
@@ -219,12 +221,12 @@ def getEbsInvoiceOrderDataDfSql():
                 tax_recoverable,
                 customer_trx_id            
                 FROM data-light-house-prod.EDW.EBS_INVOICE_ORDER_VW 
-                where 1=1 and invoice_date_ibl between '2023-07-01' and '2023-07-31'
-                
+                where 1=1 and invoice_date_ibl between '2023-08-01' and '2023-09-30'                
             '''
     
     df=pd.DataFrame()   
     df = bigQueryClient.query(sqlData).to_dataframe()
+
     oracle_dtypes = {
             'institution'   :VARCHAR2(250),
             'branch_id'     :VARCHAR2(250),
@@ -251,37 +253,24 @@ def getEbsInvoiceOrderDataDfSql():
             'tax_recoverable'       :FLOAT,
             'customer_trx_id'       :VARCHAR2(25)             
              }
-    
-    delQuery=f''' 
-                delete from {oracleTable} 
-                    where 1=1 and invoice_date_ibl between '01-jul-23' and '31-jul-23'
-            '''
-
-    oracleAlchemy.execute(delQuery)
-
     print(df)
-    print(df.info())
-
     df.to_sql(oracleTable,schema='IBLGRPHCM',if_exists='append',con=oracleAlchemy,index=False,dtype=oracle_dtypes)
-
-    # testOracleSql='select * from cat'
-    # df=pd.read_sql(testOracleSql,con=oracleAlchemy)
-    # print(df)
-
     print('done.....................')
 
+taskDeleteRecrods=PythonOperator(
+                task_id='deletingRecords'
+                ,python_callable=delRecords
+                ,dag=franchise_sale_merging
+                )
 
-# taskDeleteRecrods=PythonOperator(
-#                 task_id='deletingRecords'
-#                 ,python_callable=deleteRecords
-#                 ,dag=franchise_sale_merging
-#                 )
+taskInsertingRecords=PythonOperator(
+                task_id='insertingInvoiceRecords'
+                ,python_callable=getEbsInvoiceOrderDataDfSql
+                ,dag=franchise_sale_merging
+                )
 
-# taskInsertingRecords=PythonOperator(
-#                 task_id='insertingRecords'
-#                 ,python_callable=getFranchiseDataDfSql
-#                 ,dag=franchise_sale_merging
-#                 )
+delRecords()
+getEbsInvoiceOrderDataDfSql()
 
 # taskDeleteRecrods>>taskInsertingRecords
 
