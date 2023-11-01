@@ -73,6 +73,8 @@ from io import StringIO
 import sqlalchemy
 import cx_Oracle as xo
 import connectionClass
+from suhailLib import returnDataDate
+
 connection=connectionClass
 sapConnection=connection.sapConn()
 conn=sapConnection
@@ -89,46 +91,13 @@ storage.blob._MAX_MULTIPART_SIZE = 5 * 1024* 1024  # 5 MB
 
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"]="/home/airflow/airflow/data-light-house-prod.json"
 today = date.today()
-day_diff=4
-# curr_date = today.strftime("%d-%b-%Y")
-past_date = today - pd.DateOffset(days=day_diff)
-d1 = past_date.strftime("%Y-%m-%d")
+
 # global df
+
 df = pd.DataFrame()
 df1=pd.DataFrame()
 
-vday = 30
-numberOfRecords = 0
-total = 0
-
-vTodayDate = datetime.date(datetime.today())
-vTodayDate = int(vTodayDate.strftime("%d"))
-
-vStartDate = datetime.date(datetime.today()-timedelta(days=vday))
-vStartDate = "'"+str(vStartDate.strftime("%d-%b-%Y"))+"'"
-
-print('day : ',vTodayDate)
-
-if vTodayDate <=5:
-    print('two')
-
-    # from Previous month to current...
-    vEndDate = datetime.date(datetime.today()-timedelta(days=1))
-    vdayDiff = int(vEndDate.strftime("%d"))
-    vStartDate = datetime.date(datetime.today()-timedelta(days=vdayDiff))
-    today = date.today()
-    d = today - relativedelta(months=1)
-    vStartDate = date(d.year, d.month, 1)
-
-else:
-
-    vStartDate = datetime.date(datetime.today().replace(day=1))
-    vEndDate = datetime.date(datetime.today()-timedelta(days=1))
-
-vStartDate = "'"+str(vStartDate.strftime("%Y-%m-%d"))+"'"
-vEndDate = "'"+str(vEndDate.strftime("%Y-%m-%d"))+"'"
-
-# vEndDate = "'"+str(vEndDate.strftime("%d-%b-%Y"))+"'"
+vStartDate,vEndDate=returnDataDate()
 
 print('Start Date : ', vStartDate)
 print('End   Date : ', vEndDate)
@@ -138,8 +107,6 @@ print('End   Date : ', vEndDate)
 utc = timezone.utc
 date = datetime.now(utc)
 print('utc Time : ', date)
-# 2022-04-06 05:40:13.025347+00:00
-# creationDate = date + timedelta(hours=5)
 creationDate = date
 
 default_args = {
@@ -164,13 +131,14 @@ searle_merging = DAG(
     dagrun_timeout=timedelta(minutes=120)
 )  
 
-def deleteRecords():
-    # >={vStartDate}
+def deleteRecords():        
+    vStartDate1 = "'"+str(vStartDate.strftime("%Y-%m-%d"))+"'"
+    vEndDate1 = "'"+str(vEndDate.strftime("%Y-%m-%d"))+"'"
+
     try:
         QdelRecords = f'''DELETE FROM {oracleTable}
-                        where 1=1 and to_char(BILL_dt,'yyyy-mm-dd') between {vStartDate} and {vEndDate}
+                        where 1=1 and to_char(BILL_dt,'yyyy-mm-dd') between {vStartDate1} and {vEndDate1}
         '''
-        # print('deete qyery : ',QdelRecords)
         oracleCursor.execute(QdelRecords)
         oracleConnectionDB.commit()
 
@@ -182,10 +150,11 @@ deleteInvoiceData=PythonOperator(
                 python_callable=deleteRecords,
                 dag=searle_merging)
 
+def insertIblgrpHcmData():   
+    vStartDate1 = "'"+str(vStartDate.strftime("%Y-%m-%d"))+"'"
+    vEndDate1 = "'"+str(vEndDate.strftime("%Y-%m-%d"))+"'"
 
-def insertIblgrpHcmData():
     global dataFrame1
-
     credentials = service_account.Credentials.from_service_account_file(
         '/home/airflow/airflow/data-light-house-prod.json'
         )
@@ -195,7 +164,6 @@ def insertIblgrpHcmData():
     pandas_gbq.context.credentials = credentials
 
     client = bigquery.Client(credentials=credentials, project=project_id)
-    # >={vStartDate}
     sqlQuery = f'''SELECT
                 FORMAT_DATE('%d-%b-%y',BILLING_DATE) BILL_DT,
                 item_code ITEM_CODE,item_desc PROD_NM,
@@ -204,7 +172,7 @@ def insertIblgrpHcmData():
                 sum(QUANTITY) SOLD_QTY
                 ,sum(AMOUNT) GROSS,round(IFNULL(unit_selling_price,0))  unit_selling_price
                 FROM `data-light-house-prod.EDW.VW_SEARLE_SALES`
-                WHERE 1=1 and BILLING_DATE  between {vStartDate} and {vEndDate}
+                WHERE 1=1 and BILLING_DATE  between {vStartDate1} and {vEndDate1}
                 GROUP BY
                 FORMAT_DATE('%d-%b-%y',BILLING_DATE) ,        item_code ,item_desc ,
                 ORG_ID ,    ORG_DESC ,  CHANNEL_DESC,DATA_FLAG,unit_selling_price
@@ -228,33 +196,17 @@ insertInvoiceData=PythonOperator(
                 dag=searle_merging)
 
 def QueryBigQuerySalesData():
-    
-    if vTodayDate==1:
-        # from Previous month to current...
-        vEndDate = datetime.date(datetime.today()-timedelta(days=1))
-        vdayDiff = int(vEndDate.strftime("%d"))
-        vStartDate = datetime.date(datetime.today()-timedelta(days=vdayDiff))
-        today = date.today()
-        d = today - relativedelta(months=1)
-        vStartDate = date(d.year, d.month, 1)
-
-    else:
-
-        vStartDate = datetime.date(datetime.today().replace(day=1))
-        vEndDate = datetime.date(datetime.today()-timedelta(days=1))
-
-    vStartDate = "'"+str(vStartDate.strftime("%Y-%m-%d"))+"'"
-    vEndDate = "'"+str(vEndDate.strftime("%Y-%m-%d"))+"'"
+    vStartDate1 = "'"+str(vStartDate.strftime("%Y-%m-%d"))+"'"
+    vEndDate1 = "'"+str(vEndDate.strftime("%Y-%m-%d"))+"'"
 
     credentials = service_account.Credentials.from_service_account_file(
         '/home/airflow/airflow/data-light-house-prod.json'
     )
 
     project_id = 'data-light-house-prod'
-    # table_id = 'data-light-house-prod.EDW.IBL_SALES_DATA_BAKUP'
-
     pandas_gbq.context.credentials = credentials
     client = bigquery.Client(credentials=credentials, project=project_id)
+
     sql = f'''SELECT
     *
     FROM(
@@ -289,7 +241,7 @@ def QueryBigQuerySalesData():
         when upper(esa.SALES_ORDER_TYPE) NOT like '%RET%'  then 'Sale'
         end,' ') as reason   ,data_flag
         from `data-light-house-prod.EDW.VW_EBS_SAS_HC_ALL_LOC_DATA_NEW` ESA
-        where 1 = 1 AND billing_date >={vStartDate}
+        where 1 = 1 AND billing_date between {vStartDate1} and {vEndDate1}
         GROUP BY BR_CD,
         document_no,
         TRX_DATE1      ,
@@ -322,43 +274,26 @@ def QueryBigQuerySalesData():
     dataFrame2.to_csv(f'''{vPath}HC_ALL_LOC_SALE.txt''',
                     index=False, header=True
                     )
-
-# 
-def QueryBigQueryCustomerData():
     
-    if vTodayDate==1:
-        # from Previous month to current...
-        vEndDate = datetime.date(datetime.today()-timedelta(days=1))
-        vdayDiff = int(vEndDate.strftime("%d"))
-        vStartDate = datetime.date(datetime.today()-timedelta(days=vdayDiff))
-        today = date.today()
-        d = today - relativedelta(months=1)
-        vStartDate = date(d.year, d.month, 1)
-
-    else:
-
-        vStartDate = datetime.date(datetime.today().replace(day=1))
-        vEndDate = datetime.date(datetime.today()-timedelta(days=1))
-
-    vStartDate = "'"+str(vStartDate.strftime("%Y-%m-%d"))+"'"
-    vEndDate = "'"+str(vEndDate.strftime("%Y-%m-%d"))+"'"
+def QueryBigQueryCustomerData():    
+    vStartDate1 = "'"+str(vStartDate.strftime("%Y-%m-%d"))+"'"
+    vEndDate1 = "'"+str(vEndDate.strftime("%Y-%m-%d"))+"'"   
 
     credentials = service_account.Credentials.from_service_account_file(
         '/home/airflow/airflow/data-light-house-prod.json'
     )
 
     project_id = 'data-light-house-prod'
-    # table_id = 'data-light-house-prod.EDW.IBL_SALES_DATA_BAKUP'
-
     pandas_gbq.context.credentials = credentials
     client = bigquery.Client(credentials=credentials, project=project_id)
+
     sql = f'''select distinct
                 branch_id BR_CD,replace(CUSTOMER_NUMBER,'.0','')  EBS_CUST,CUSTOMER_NAME
                 ,ifnull(CHANNEL,'')  CH_CD
                 ,ifnull(address_1,'') ADD1
                 ,concat(ifnull(address_2,''),ifnull(address_3,'')) ADD2, data_flag
                 from `data-light-house-prod.EDW.VW_EBS_SAS_HC_ALL_LOC_DATA_NEW`
-                where billing_date >={vStartDate} and branch_id is not null
+                where billing_date  between {vStartDate1} and {vEndDate1} and branch_id is not null
         '''
 
     dataFrame1 = client.query(sql).to_dataframe()
@@ -394,10 +329,13 @@ generateCustomerFileData=PythonOperator(
                     ,dag=searle_merging
                 )
 
-
+# deleteRecords()
+# insertIblgrpHcmData()
+# QueryBigQuerySalesData()
+# QueryBigQueryCustomerData()
 
 [
     deleteInvoiceData>>insertInvoiceData
     ,generateSalesFileData,generateCustomerFileData
-
 ]
+
