@@ -176,137 +176,137 @@ franchise_sale_merging = DAG(
 
 def deleteRecords():
     delQuery=f'''delete from data-light-house-prod.EDW.FRANCHISE_SALES_NEW
-            where invoice_date>='2023-08-01' '''
+            where invoice_date>='2023-09-01' '''
     
     job=bigQueryClient.query(delQuery)
     job.result()
 
-def getFranchiseDataParqeet():
-    # global
-    sqlData=f'''select
-                '6300' company_code,
-                ibl_distributor_code,
-                ibl_distributor_desc,
-                branch_code,
-                distributor_location_id,
-                distributor_location_desc,
-                order_no,
-                invoice_number,
-                invoice_date,
-                channel,
-                distributor_customer_code,
-                ibl_customer_code,
-                ibl_customer_name,
-                distributor_item_code,
-                ibl_item_code,
-                ibl_item_description,
-                sold_qty,
-                gross_amount,
-                bonus_qty,
-                discount,
-                reason,
-                address,
-                cast(to_char(record_date,'yyyymmdd')  as numeric) as record_date,
-                brick_code,brick_name
-            from franchise.franchise_data fd     
-            where 1=1 and invoice_date between '2023-08-01' and '2023-08-31'
-            '''
+# def getFranchiseDataParqeet():
+#     # global
+#     sqlData=f'''select
+#                 '6300' company_code,
+#                 ibl_distributor_code,
+#                 ibl_distributor_desc,
+#                 branch_code,
+#                 distributor_location_id,
+#                 distributor_location_desc,
+#                 order_no,
+#                 invoice_number,
+#                 invoice_date,
+#                 channel,
+#                 distributor_customer_code,
+#                 ibl_customer_code,
+#                 ibl_customer_name,
+#                 distributor_item_code,
+#                 ibl_item_code,
+#                 ibl_item_description,
+#                 sold_qty,
+#                 gross_amount,
+#                 bonus_qty,
+#                 discount,
+#                 reason,
+#                 address,
+#                 cast(to_char(record_date,'yyyymmdd')  as numeric) as record_date,
+#                 brick_code,brick_name
+#             from franchise.franchise_data fd     
+#             where 1=1 and invoice_date between '2023-08-01' and '2023-08-31'
+#             '''
 
-    # dataFile=f'''{filePath}franchiseData.parquet'''
+#     # dataFile=f'''{filePath}franchiseData.parquet'''
 
-    franchiseDf=pd.read_sql(sqlData,con=franchiseEngine)
-    franchiseDf['invoice_date']=pd.to_datetime(franchiseDf['invoice_date']) 
-    print(franchiseDf)
+#     franchiseDf=pd.read_sql(sqlData,con=franchiseEngine)
+#     franchiseDf['invoice_date']=pd.to_datetime(franchiseDf['invoice_date']) 
+#     print(franchiseDf)
 
-    conn1=sapConn
-    cus_df=pds.read_sql(f'''
-                        SELECT distinct  KUNNR as "SAP_CUSTOMER_CODE"
-                        ,ADRNR
-                        ,A.STR_SUPPL1 add1,
-                        A.STR_SUPPL2 add2,A.STR_SUPPL3 add3
-                        FROM SAPABAP1.KNA1 AS B
-                        LEFT OUTER JOIN SAPABAP1.ADRC AS A ON (A.CLIENT=B.MANDT AND A.ADDRNUMBER=B.ADRNR)
-                        WHERE 1=1 AND MANDT=300
-                        ''',conn1)
+#     conn1=sapConn
+#     cus_df=pds.read_sql(f'''
+#                         SELECT distinct  KUNNR as "SAP_CUSTOMER_CODE"
+#                         ,ADRNR
+#                         ,A.STR_SUPPL1 add1,
+#                         A.STR_SUPPL2 add2,A.STR_SUPPL3 add3
+#                         FROM SAPABAP1.KNA1 AS B
+#                         LEFT OUTER JOIN SAPABAP1.ADRC AS A ON (A.CLIENT=B.MANDT AND A.ADDRNUMBER=B.ADRNR)
+#                         WHERE 1=1 AND MANDT=300
+#                         ''',conn1)
 
-    branch_df=pds.read_sql(f'''
-                        SELECT distinct  VKBUR "sap_branch_code",BEZEI "branch_desc"
-                        FROM SAPABAP1.TVKBT BRANCH WHERE MANDT=300 AND SPRAS ='E'
-                        ''',conn1)
+#     branch_df=pds.read_sql(f'''
+#                         SELECT distinct  VKBUR "sap_branch_code",BEZEI "branch_desc"
+#                         FROM SAPABAP1.TVKBT BRANCH WHERE MANDT=300 AND SPRAS ='E'
+#                         ''',conn1)
 
-    fran_sale_df = franchiseDf.merge(
-        cus_df, how='left', left_on=['ibl_customer_code'], right_on=['SAP_CUSTOMER_CODE'])
+#     fran_sale_df = franchiseDf.merge(
+#         cus_df, how='left', left_on=['ibl_customer_code'], right_on=['SAP_CUSTOMER_CODE'])
 
-    fran_sale_df = fran_sale_df.merge(
-        branch_df, how='left', left_on=['branch_code'], right_on=['sap_branch_code'])
+#     fran_sale_df = fran_sale_df.merge(
+#         branch_df, how='left', left_on=['branch_code'], right_on=['sap_branch_code'])
 
-    fran_sale_df['ref_customer_code'] = np.where(fran_sale_df['SAP_CUSTOMER_CODE'].isnull(), franchiseDf['ibl_distributor_code'].astype(
-        str)+'-'+franchiseDf['ibl_customer_code'].astype(str)
-                , franchiseDf['ibl_customer_code']
-                    )
+#     fran_sale_df['ref_customer_code'] = np.where(fran_sale_df['SAP_CUSTOMER_CODE'].isnull(), franchiseDf['ibl_distributor_code'].astype(
+#         str)+'-'+franchiseDf['ibl_customer_code'].astype(str)
+#                 , franchiseDf['ibl_customer_code']
+#                     )
 
-    fran_sale_df.drop(['SAP_CUSTOMER_CODE', 'ADRNR','sap_branch_code'], inplace=True, axis=1)
-    dataFile=f'''{filePath}franchiseData.parquet'''
+#     fran_sale_df.drop(['SAP_CUSTOMER_CODE', 'ADRNR','sap_branch_code'], inplace=True, axis=1)
+#     dataFile=f'''{filePath}franchiseData.parquet'''
     
-    fran_sale_df['transfer_date'] = datetime.now()
-    column_name = ["company_code",
-                    "ibl_distributor_code",
-                    "ibl_distributor_desc",
-                    "branch_code",
-                    "branch_desc",
-                    "distributor_location_id",
-                    "distributor_location_desc",
-                    "order_no",
-                    "invoice_number",
-                    "invoice_date",
-                    "channel",
-                    "distributor_customer_code",
-                    "ibl_customer_code",
-                    "ref_customer_code",
-                    "ibl_customer_name",
-                    "brick_code",
-                    "brick_name",
-                    "ADD1",
-                    "ADD2",
-                    "ADD3",
-                    "distributor_item_code",
-                    "ibl_item_code",
-                    "ibl_item_description",
-                    "sold_qty",
-                    "gross_amount",
-                    "bonus_qty",
-                    "discount",
-                    "reason",
-                    "data_loading_date",
-                    "transfer_date",
-                    "record_date",
-                    "address"
-                ]
-    fran_sale_df=fran_sale_df.reindex(columns=column_name)
+#     fran_sale_df['transfer_date'] = datetime.now()
+#     column_name = ["company_code",
+#                     "ibl_distributor_code",
+#                     "ibl_distributor_desc",
+#                     "branch_code",
+#                     "branch_desc",
+#                     "distributor_location_id",
+#                     "distributor_location_desc",
+#                     "order_no",
+#                     "invoice_number",
+#                     "invoice_date",
+#                     "channel",
+#                     "distributor_customer_code",
+#                     "ibl_customer_code",
+#                     "ref_customer_code",
+#                     "ibl_customer_name",
+#                     "brick_code",
+#                     "brick_name",
+#                     "ADD1",
+#                     "ADD2",
+#                     "ADD3",
+#                     "distributor_item_code",
+#                     "ibl_item_code",
+#                     "ibl_item_description",
+#                     "sold_qty",
+#                     "gross_amount",
+#                     "bonus_qty",
+#                     "discount",
+#                     "reason",
+#                     "data_loading_date",
+#                     "transfer_date",
+#                     "record_date",
+#                     "address"
+#                 ]
+#     fran_sale_df=fran_sale_df.reindex(columns=column_name)
 
-    fran_sale_df.to_parquet(dataFile,index=False)
-    df1=pd.read_parquet(dataFile)
-    print(df1.info())
+#     fran_sale_df.to_parquet(dataFile,index=False)
+#     df1=pd.read_parquet(dataFile)
+#     print(df1.info())
     
-    project_id = 'data-light-house-prod'
-    client=bigquery.Client(credentials=credentials,project=project_id)
-    job_config = bigquery.LoadJobConfig(
-        write_disposition=bigquery.WriteDisposition.WRITE_TRUNCATE,
-        source_format=bigquery.SourceFormat.PARQUET,
-    )    
+#     project_id = 'data-light-house-prod'
+#     client=bigquery.Client(credentials=credentials,project=project_id)
+#     job_config = bigquery.LoadJobConfig(
+#         write_disposition=bigquery.WriteDisposition.WRITE_TRUNCATE,
+#         source_format=bigquery.SourceFormat.PARQUET,
+#     )    
 
-    # filePath = dataFile
-    with open(dataFile,"rb") as source_file:
-        load_job = client.load_table_from_file(
-            source_file, tableId, job_config=job_config
-        )  
+#     # filePath = dataFile
+#     with open(dataFile,"rb") as source_file:
+#         load_job = client.load_table_from_file(
+#             source_file, tableId, job_config=job_config
+#         )  
 
-        load_job.result()  # Waits for the job to complete.    
+#         load_job.result()  # Waits for the job to complete.    
 
-    # df to table
-    # pandas_gbq.to_gbq(franchiseDf, f'{GCS_PROJECT}.{DATA_SET_ID}.{tableId}', project_id=GCS_PROJECT, if_exists='replace')
+#     # df to table
+#     # pandas_gbq.to_gbq(franchiseDf, f'{GCS_PROJECT}.{DATA_SET_ID}.{tableId}', project_id=GCS_PROJECT, if_exists='replace')
 
-    print('done.....................')
+#     print('done.....................')
 
 def getFranchiseDataDfSql():
     # global
@@ -336,7 +336,7 @@ def getFranchiseDataDfSql():
                 cast(to_char(record_date,'yyyymmdd')  as numeric) as record_date,
                 brick_code,brick_name
             from franchise.franchise_data fd     
-            where 1=1 and invoice_date between '2023-08-01' and '2023-08-31'
+            where 1=1 and invoice_date between '2023-09-01' and '2023-09-30'
 
             '''
 

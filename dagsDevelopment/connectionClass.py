@@ -86,7 +86,7 @@ def markittSqlServerAlchmy():
     engine = sqlalchemy.create_engine(connect_string)
     return engine
 
-def oracleIblGrpHcmAlchmy():
+def oracleIblGrpHcmAlchmy(): 
     DIALECT = 'oracle'
     SQL_DRIVER = 'cx_oracle'
     USERNAME = 'IBLGRPHCM' #enter your username

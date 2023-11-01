@@ -269,8 +269,9 @@ taskInsertingRecords=PythonOperator(
                 ,dag=franchise_sale_merging
                 )
 
-delRecords()
-getEbsInvoiceOrderDataDfSql()
+# delRecords()
+# getEbsInvoiceOrderDataDfSql()
+
 
 # taskDeleteRecrods>>taskInsertingRecords
 

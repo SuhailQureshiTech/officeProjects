@@ -168,7 +168,7 @@ def deleteRecords():
     # >={vStartDate}
     try:
         QdelRecords = f'''DELETE FROM {oracleTable}
-                        where 1=1 and to_char(BILL_dt,'yyyy-mm-dd') between '2023-08-01' and '2023-08-31'
+                        where 1=1 and to_char(BILL_dt,'yyyy-mm-dd') between '2023-09-01' and '2023-09-30'
         '''
         # print('deete qyery : ',QdelRecords)
         oracleCursor.execute(QdelRecords)
@@ -199,7 +199,7 @@ def insertIblgrpHcmData():
                 sum(QUANTITY) SOLD_QTY
                 ,sum(AMOUNT) GROSS,round(IFNULL(unit_selling_price,0))  unit_selling_price
                 FROM `data-light-house-prod.EDW.VW_SEARLE_SALES`
-                WHERE 1=1 and BILLING_DATE  between  '2023-08-01' and '2023-08-31'
+                WHERE 1=1 and BILLING_DATE  between  '2023-09-01' and '2023-09-30'
                 GROUP BY  FORMAT_DATE('%d-%b-%y',BILLING_DATE) ,        item_code ,item_desc ,
                 ORG_ID ,    ORG_DESC ,  CHANNEL_DESC,DATA_FLAG,unit_selling_price
             '''
@@ -278,7 +278,7 @@ def QueryBigQuerySalesData():
         when upper(esa.SALES_ORDER_TYPE) NOT like '%RET%'  then 'Sale'
         end,' ') as reason   ,data_flag
         from `data-light-house-prod.EDW.VW_EBS_SAS_HC_ALL_LOC_DATA_NEW` ESA
-        where 1 = 1 AND billing_date  between  '2023-08-01' and '2023-08-31'
+        where 1 = 1 AND billing_date  between  '2023-09-01' and '2023-09-30'
         GROUP BY BR_CD,
         document_no,
         TRX_DATE1      ,
@@ -347,7 +347,7 @@ def QueryBigQueryCustomerData():
                 ,ifnull(address_1,'') ADD1
                 ,concat(ifnull(address_2,''),ifnull(address_3,'')) ADD2, data_flag
                 from `data-light-house-prod.EDW.VW_EBS_SAS_HC_ALL_LOC_DATA_NEW`
-                where billing_date between  '2023-08-01' and '2023-08-31'
+                where billing_date between  '2023-09-01' and '2023-09-30'
                 and branch_id is not null
         '''
 
