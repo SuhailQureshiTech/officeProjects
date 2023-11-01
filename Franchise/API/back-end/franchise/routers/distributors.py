@@ -151,6 +151,8 @@ async def upload_sales_file(company_code, user_id, files: UploadFile = File(...)
         date_validation = df['Franchise Customer Invoice Date'].dt.date < datetime64(
             today)
         
+        print('date ........ validate')
+        print(date_validation.all()!=True)
         if date_validation.all() != True:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                     detail="Invalid Date in sales file, Invoice Date should be less than current data")
@@ -273,11 +275,18 @@ async def upload_sales_file(company_code, user_id, files: UploadFile = File(...)
 
         if df['NET_AMT'].dtypes != float:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                     detail="NET_AMT should contain integer values and must not null")                
+                     detail="NET_AMT should contain integer values and must not null")   
 
-        if df['DISCOUNTED_RATE'].dtypes != int64:
+        if df['DISCOUNTED_RATE'].isnull().values.any():
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="DISCOUNTED_RATE cannot be null")        
+
+
+
+        if (df['DISCOUNTED_RATE'].dtypes != int64 and  df['DISCOUNTED_RATE'].dtypes != float):
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                      detail="DISCOUNTED_RATE should contain integer values and must not null")                
+
     checkColumnsinFile()
     validateData()
 
