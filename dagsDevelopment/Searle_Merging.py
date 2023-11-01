@@ -331,8 +331,8 @@ generateCustomerFileData=PythonOperator(
 
 # deleteRecords()
 # insertIblgrpHcmData()
-# QueryBigQuerySalesData()
-# QueryBigQueryCustomerData()
+QueryBigQuerySalesData()
+QueryBigQueryCustomerData()
 
 [
     deleteInvoiceData>>insertInvoiceData

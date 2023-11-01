@@ -217,23 +217,6 @@ def insertIblgrpHcmData():
         print(e)
 
 def QueryBigQuerySalesData():
-    
-    if vTodayDate==1:
-        # from Previous month to current...
-        vEndDate = datetime.date(datetime.today()-timedelta(days=1))
-        vdayDiff = int(vEndDate.strftime("%d"))
-        vStartDate = datetime.date(datetime.today()-timedelta(days=vdayDiff))
-        today = date.today()
-        d = today - relativedelta(months=1)
-        vStartDate = date(d.year, d.month, 1)
-
-    else:
-
-        vStartDate = datetime.date(datetime.today().replace(day=1))
-        vEndDate = datetime.date(datetime.today()-timedelta(days=1))
-
-    vStartDate = "'"+str(vStartDate.strftime("%Y-%m-%d"))+"'"
-    vEndDate = "'"+str(vEndDate.strftime("%Y-%m-%d"))+"'"
 
     credentials = service_account.Credentials.from_service_account_file(
         '/home/airflow/airflow/data-light-house-prod.json'
@@ -278,7 +261,7 @@ def QueryBigQuerySalesData():
         when upper(esa.SALES_ORDER_TYPE) NOT like '%RET%'  then 'Sale'
         end,' ') as reason   ,data_flag
         from `data-light-house-prod.EDW.VW_EBS_SAS_HC_ALL_LOC_DATA_NEW` ESA
-        where 1 = 1 AND billing_date  between  '2023-09-01' and '2023-09-30'
+        where 1 = 1 AND billing_date  between  '2023-10-01' and '2023-10-31'
         GROUP BY BR_CD,
         document_no,
         TRX_DATE1      ,
@@ -314,23 +297,6 @@ def QueryBigQuerySalesData():
 
 # 
 def QueryBigQueryCustomerData():
-    
-    if vTodayDate==1:
-        # from Previous month to current...
-        vEndDate = datetime.date(datetime.today()-timedelta(days=1))
-        vdayDiff = int(vEndDate.strftime("%d"))
-        vStartDate = datetime.date(datetime.today()-timedelta(days=vdayDiff))
-        today = date.today()
-        d = today - relativedelta(months=1)
-        vStartDate = date(d.year, d.month, 1)
-
-    else:
-
-        vStartDate = datetime.date(datetime.today().replace(day=1))
-        vEndDate = datetime.date(datetime.today()-timedelta(days=1))
-
-    vStartDate = "'"+str(vStartDate.strftime("%Y-%m-%d"))+"'"
-    vEndDate = "'"+str(vEndDate.strftime("%Y-%m-%d"))+"'"
 
     credentials = service_account.Credentials.from_service_account_file(
         '/home/airflow/airflow/data-light-house-prod.json'
@@ -347,7 +313,7 @@ def QueryBigQueryCustomerData():
                 ,ifnull(address_1,'') ADD1
                 ,concat(ifnull(address_2,''),ifnull(address_3,'')) ADD2, data_flag
                 from `data-light-house-prod.EDW.VW_EBS_SAS_HC_ALL_LOC_DATA_NEW`
-                where billing_date between  '2023-09-01' and '2023-09-30'
+                where billing_date between  '2023-10-01' and '2023-10-31'
                 and branch_id is not null
         '''
 
@@ -375,5 +341,6 @@ def QueryBigQueryCustomerData():
 
 # deleteRecords()
 # insertIblgrpHcmData()
+
 QueryBigQuerySalesData()
 QueryBigQueryCustomerData()
