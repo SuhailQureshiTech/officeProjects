@@ -121,7 +121,7 @@ airflowPurgeLogDag = DAG(
     # run this dag at 2 hours 30 min interval from 00:00 28-03-2017
     catchup=False,
     # schedule_interval=None,
-    schedule_interval='0 1 15 * *',
+    schedule_interval='0 13 1,15 * *',
     dagrun_timeout=timedelta(minutes=120)
         )
 
