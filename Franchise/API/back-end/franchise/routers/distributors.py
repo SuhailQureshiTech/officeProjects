@@ -148,14 +148,12 @@ async def upload_sales_file(company_code, user_id, files: UploadFile = File(...)
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                     detail="Franchise Customer Invoice Date contains other than Date value")
 
-        date_validation = df['Franchise Customer Invoice Date'].dt.date < datetime64(
-            today)
+        # date_validation = df['Franchise Customer Invoice Date'].dt.date < datetime64(
+        #     today)
         
-        print('date ........ validate')
-        print(date_validation.all()!=True)
-        if date_validation.all() != True:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Invalid Date in sales file, Invoice Date should be less than current data")
+        # if date_validation.all() != True:
+        #     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+        #             detail="Invalid Date in sales file, Invoice Date should be less than current data")
 
         if df['Franchise Customer Invoice Number'].isnull().values.any():
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
@@ -211,13 +209,9 @@ async def upload_sales_file(company_code, user_id, files: UploadFile = File(...)
 
         if df['Franchise Item Code'].astype('str').str.count('\s+').any():
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="whitespaces found")        
+                    detail="whitespaces found")      
 
-        if df['IBL Item Code'].dtypes != int64:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="IBL item code should contain integer values")        
-
-        if df['IBL Item Code'].apply(lambda x: len(str(x))>11).any():
+        if df['IBL Item Code'].apply(lambda x: len(str(x))>11 ).any() or df['IBL Item Code'].apply(lambda x: len(str(x))<10).any():
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                     detail="IBL Item Code length must not greater than 11 character")        
 
@@ -269,11 +263,11 @@ async def upload_sales_file(company_code, user_id, files: UploadFile = File(...)
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                      detail="BON_QTY should contain integer values and must not null")   
 
-        if df['DISC_AMT'].dtypes != float:
+        if (df['DISC_AMT'].dtypes != float and df['DISC_AMT'].dtypes !=int64):
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                      detail="DISC_AMT should contain integer values and must not null")               
 
-        if df['NET_AMT'].dtypes != float:
+        if (df['NET_AMT'].dtypes != float and df['NET_AMT'].dtypes != int64):
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                      detail="NET_AMT should contain integer values and must not null")   
 
@@ -450,14 +444,10 @@ async def upload_stock_file(company_code, user_id, stockFiles: UploadFile = File
         if df['RD Item Code'].isnull().values.any():
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                     detail="RD Item Code cannot be null")
-
-        if df['IBL Item Code'].dtypes != int64:
+        
+        if df['IBL Item Code'].apply(lambda x: len(str(x))>11 ).any() or df['IBL Item Code'].apply(lambda x: len(str(x))<10).any():
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="IBL item code should contain integer values")        
-
-        if df['IBL Item Code'].apply(lambda x: len(str(x))>11).any():
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="IBL Item Code length must not greater than 11 character")     
+                    detail="IBL Item Code length must not greater than 11 character")       
 
         if df['RD Item Description'].isnull().values.any():
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,

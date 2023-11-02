@@ -50,7 +50,9 @@ def update_user_info(id, request: users_schemas.User ,db: Session=Depends(databa
 
 @router.put('/updateUserPassword/{email}', status_code=status.HTTP_202_ACCEPTED)
 def update_user_password(email, request: users_schemas.User ,db: Session=Depends(database.get_db)):
+    print('email user . ',email)
     return user.updateUserPassword(email, request, db)
+
 
 # @router.get('/listOfDistributor/{userRoleId}', status_code=status.HTTP_200_OK)
 # def fetch_distributor(userRoleId, db: Session=Depends(database.get_db)):

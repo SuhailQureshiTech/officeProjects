@@ -68,3 +68,14 @@ def updateUserPassword(email, request: users_schemas.User ,db:Session):
     })
     db.commit()
     return 'User Password Updated'
+
+# def updateUserPassword(email, request: users_schemas.User ,db:Session):
+#     updateUserPassword = db.query(models.User).filter(models.User.email == email)
+#     if not updateUserPassword.first():
+#         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+#                             detail=f"User details with email {email} not found")
+#     updateUserPassword.update({
+#         'password': Hash.passwordHash(request.password)
+#     })
+#     db.commit()
+#     return 'User Password Updated'
