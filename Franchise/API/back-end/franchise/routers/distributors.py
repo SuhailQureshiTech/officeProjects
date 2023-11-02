@@ -1,7 +1,7 @@
-from datetime import date, datetime
+from datetime import date, datetime, timedelta, timezone
 import time
 from io import BytesIO
-from fastapi import APIRouter, Depends, status, UploadFile, File, HTTPException
+from fastapi import APIRouter, Depends, status, UploadFile, File, HTTPException,Request
 from numpy import datetime64, int64
 import pandas as pd
 import psycopg2
@@ -27,9 +27,9 @@ conn_string =  'postgresql://franchise:franchisePassword!123!456@35.216.155.219:
 today = date.today()
 
 @router.post('/uploadSalesData/{company_code}/{user_id}', status_code=status.HTTP_201_CREATED)
-async def upload_sales_file(company_code, user_id, files: UploadFile = File(...)):
-    df = pd.read_excel(BytesIO(files.file.read()), sheet_name="Sales")
-    
+async def upload_sales_file(company_code, user_id, request: Request, files: UploadFile = File(...)):
+
+    df = pd.read_excel(BytesIO(files.file.read()), sheet_name="Sales")  
     df.columns = df.columns.str.strip()
     def checkColumnsinFile():
         if len(df.columns) > 26:
@@ -337,6 +337,27 @@ async def upload_sales_file(company_code, user_id, files: UploadFile = File(...)
     total_sales_bonus_quantity = df['bon_qty'].sum()
     total_sales_SKU = df['ibl_item_code'].nunique(dropna=True)
     total_sales_rows = df.shape[0]
+    fileName=files.filename
+
+    dataDetails={
+        "Distributor_code":user_id,
+        "File_Name":fileName,
+        "Sales_Quantity": int(total_sales_quantity),
+        "Sales_Gross_Amount": int(total_sales_gross_amount),
+        "Sales_Discounts": int(total_sales_discount),
+        "Sales_Bonus_Quantity": int(total_sales_bonus_quantity),
+        "Total_Sales_SKUs": int(total_sales_SKU),
+        "Total_Sales_Rows": int(total_sales_rows),
+    }
+
+    print('data details dataframe :')
+
+    dataDetailsdf=pd.DataFrame.from_dict([dataDetails])
+    dataDetailsdf.to_sql('users_activity_log', schema="franchise",
+                        if_exists='append', con=conn, index=False)
+    
+    dataDetailsdf.to_csv('dataDetails.csv',index=False)
+    print(dataDetailsdf.to_string(index=False))
 
     return {
         "Sales_Quantity": int(total_sales_quantity),
