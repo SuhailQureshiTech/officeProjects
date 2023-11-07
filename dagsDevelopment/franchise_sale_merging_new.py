@@ -86,7 +86,7 @@ fileName = 'FranchiseSales.csv'
 GCS_PROJECT = 'data-light-house-prod'
 DATA_SET_ID='EDW'
 # tableId='data-light-house-prod.EDW.FRANCHISE_SALES_NEW'
-tableId='FRANCHISE_SALES_NEW1'
+tableId='FRANCHISE_SALES_NEW'
 fran_sale_df=pd.DataFrame()
 
 # storageClient = storage.Client.from_service_account_json(
@@ -175,7 +175,9 @@ franchise_sale_merging = DAG(
 
 
 def deleteRecords():
-    delQuery=f'''delete from data-light-house-prod.EDW.FRANCHISE_SALES_NEW1 where invoice_date>='2023-08-01' '''
+    delQuery=f'''delete from data-light-house-prod.EDW.FRANCHISE_SALES_NEW
+                    where invoice_date  between '2023-09-01' and '2023-09-30' 
+      '''
     job=bigQueryClient.query(delQuery)
     job.result()
 
@@ -334,11 +336,8 @@ def getFranchiseDataDfSql():
                 cast(to_char(record_date,'yyyymmdd')  as numeric) as record_date,
                 brick_code,brick_name
             from franchise.franchise_data fd     
-            where 1=1 and invoice_date between '2023-08-01' and '2023-08-31'
-
+            where 1=1 and invoice_date between '2023-09-01' and '2023-09-30'
             '''
-
-    # dataFile=f'''{filePath}franchiseData.parquet'''
 
     franchiseDf=pd.read_sql(sqlData,con=franchiseEngine)
     franchiseDf['invoice_date']=pd.to_datetime(franchiseDf['invoice_date']) 
@@ -414,16 +413,14 @@ def getFranchiseDataDfSql():
     pandas_gbq.to_gbq(fran_sale_df, f'{GCS_PROJECT}.{DATA_SET_ID}.{tableId}', project_id=GCS_PROJECT, if_exists='append')
     print('done.....................')
 
-# getFranchiseData()    
-#deleteRecords()
-#getFranchiseDataDfSql()
+deleteRecords() 
+getFranchiseDataDfSql()
 
 taskDeleteRecrods=PythonOperator(
                 task_id='deletingRecords'
                 ,python_callable=deleteRecords
                 ,dag=franchise_sale_merging
                 )
-
 taskInsertingRecords=PythonOperator(
                 task_id='insertingRecords'
                 ,python_callable=getFranchiseDataDfSql
@@ -431,5 +428,6 @@ taskInsertingRecords=PythonOperator(
                 )
 
 taskDeleteRecrods>>taskInsertingRecords
+
 # deleteTempDataFile>> deleteBQRecordsTask >> franchiseSaleDataGenerationTask >> [franchiseSale_to_BQ]
 

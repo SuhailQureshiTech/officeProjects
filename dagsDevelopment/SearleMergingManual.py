@@ -177,7 +177,6 @@ def deleteRecords():
     except Exception as e:
         oracleConnectionDB.rollback()
 
-
 def insertIblgrpHcmData():
     global dataFrame1
 
@@ -261,7 +260,7 @@ def QueryBigQuerySalesData():
         when upper(esa.SALES_ORDER_TYPE) NOT like '%RET%'  then 'Sale'
         end,' ') as reason   ,data_flag
         from `data-light-house-prod.EDW.VW_EBS_SAS_HC_ALL_LOC_DATA_NEW` ESA
-        where 1 = 1 AND billing_date  between  '2023-10-01' and '2023-10-31'
+        where 1 = 1 AND billing_date  between  '2023-09-01' and '2023-09-30'
         GROUP BY BR_CD,
         document_no,
         TRX_DATE1      ,
@@ -313,7 +312,7 @@ def QueryBigQueryCustomerData():
                 ,ifnull(address_1,'') ADD1
                 ,concat(ifnull(address_2,''),ifnull(address_3,'')) ADD2, data_flag
                 from `data-light-house-prod.EDW.VW_EBS_SAS_HC_ALL_LOC_DATA_NEW`
-                where billing_date between  '2023-10-01' and '2023-10-31'
+                where billing_date between  '2023-09-01' and '2023-09-30'
                 and branch_id is not null
         '''
 
@@ -339,8 +338,8 @@ def QueryBigQueryCustomerData():
                       )
 
 
-# deleteRecords()
-# insertIblgrpHcmData()
+deleteRecords()
+insertIblgrpHcmData()
 
 QueryBigQuerySalesData()
 QueryBigQueryCustomerData()
