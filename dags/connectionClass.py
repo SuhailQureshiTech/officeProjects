@@ -5,10 +5,13 @@ import pandas as pd
 from google.cloud import storage
 import os
 from google.oauth2 import service_account
+from urllib.parse import quote
+import urllib
 from sqlalchemy import create_engine
 import sqlalchemy
 import pyodbc
 import cx_Oracle as xo
+
 
 #verify the architecture of Python
 print ("Platform architecture: " + platform.architecture()[0])
@@ -36,10 +39,8 @@ def sapConn():
         password='EtlIbl12345' )
     return conn
 
-
 def s4HanaConnection():
     conn = dbapi.connect(
-
         address='10.210.134.205',
         port='33015',
         user='Etl',
@@ -139,4 +140,14 @@ def lorealConnectionAlchemy():
     ENGINE_PATH_WIN_AUTH = DIALECT + '+' + SQL_DRIVER + '://' + USERNAME + ':' + PASSWORD +'@' + HOST + ':' + str(PORT) + '/?service_name=' + SERVICE
 
     engine =sqlalchemy.create_engine(ENGINE_PATH_WIN_AUTH)
+    return engine
+
+def attendanceMachine66():
+    server = '192.168.130.66'
+    db = 'iblgrp'
+    user = 'sa'
+    password =urllib.parse.quote_plus ('abc@123')
+    schema = 'dbo'
+    connect_string = f'''mssql+psycopg2://{user}:{password}@{server}:1433/{db}'''
+    engine = sqlalchemy.create_engine(connect_string)
     return engine
