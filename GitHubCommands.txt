@@ -27,9 +27,9 @@ git pull https://github.com/SuhailQureshiTech/GitHubPython.git
 # pulling specific branch from gitHub
 https://linuxhint.com/pull-specific-directory-with-git/
 
-git remote set-url git@github.com:SuhailQureshiTech/GitHubPython.git
+git remote set-url git@github.com:SuhailQureshiTech/officeProjects.git
 
-git remote add origin git@github.com:SuhailQureshiTech/GitHubPython.git
+git remote add origin git@github.com:SuhailQureshiTech/officeProjects.git
 
 git config --global user.name "SuhailQureshi"
 git config --global user.email "suhailqureshi.ibl@gmail"
