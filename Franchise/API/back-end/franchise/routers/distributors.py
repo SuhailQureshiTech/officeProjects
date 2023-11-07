@@ -196,7 +196,14 @@ async def upload_sales_file(company_code, user_id, request: Request, files: Uplo
         if df['IBL Customer Number'].apply(lambda x: len(str(x))>10).any():
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                     detail="IBL Customer Number length must not greater than 10 character")                 
-          
+
+        dfCheckFranIblCus=df.query(" `IBL Customer Number`==`Franchise Code`  ")
+        if len(dfCheckFranIblCus)>0:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Franchise Code is not allowed to be in IBL Customer Number")                 
+
+
+
         if df['RD Customer Name'].isnull().values.any():
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                     detail="RD Customer Name cannot be null")        
@@ -360,7 +367,7 @@ async def upload_sales_file(company_code, user_id, request: Request, files: Uplo
     dataDetailsdf.to_sql('users_activity_log', schema="franchise",
                         if_exists='append', con=conn, index=False)
     
-    dataDetailsdf.to_csv("d:\\temp\\dataDetails.csv",index=False)
+    # dataDetailsdf.to_csv("d:\\temp\\dataDetails.csv",index=False)
 
     # dataDetailsdf.to_csv(f''' dataDetails.csv''',index=False)
     # print(dataDetailsdf.to_string(index=False))
