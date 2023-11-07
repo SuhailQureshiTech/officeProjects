@@ -2,6 +2,7 @@ from datetime import date, datetime, timedelta, timezone
 import time
 from io import BytesIO
 from fastapi import APIRouter, Depends, status, UploadFile, File, HTTPException,Request
+from fastapi.responses import FileResponse
 from numpy import datetime64, int64
 import pandas as pd
 import psycopg2
@@ -11,6 +12,8 @@ from franchise import database
 import numpy as np
 import requests
 from . import dateLib
+import tkinter as tk
+from tkinter import filedialog
 
 spec_chars = ["!", '"', "#", "%", "&", "'" ,"\(","\)"
     ,"\*" ,"\+"  ,","   ,"-" , "/"  ,":",";", "<","=", ">"
@@ -356,9 +359,13 @@ async def upload_sales_file(company_code, user_id, request: Request, files: Uplo
     dataDetailsdf.to_sql('users_activity_log', schema="franchise",
                         if_exists='append', con=conn, index=False)
     
-    dataDetailsdf.to_csv('dataDetails.csv',index=False)
-    print(dataDetailsdf.to_string(index=False))
+    dataDetailsdf.to_csv("d:\\temp\\dataDetails.csv",index=False)
 
+    # dataDetailsdf.to_csv(f''' dataDetails.csv''',index=False)
+    # print(dataDetailsdf.to_string(index=False))
+    # return FileResponse(path="dataDetails.csv", filename="d:\\temp\\dataDetails.csv"
+    #                     , media_type="multipart/form-data")
+    
     return {
         "Sales_Quantity": int(total_sales_quantity),
         "Sales_Gross_Amount": int(total_sales_gross_amount),
@@ -367,6 +374,8 @@ async def upload_sales_file(company_code, user_id, request: Request, files: Uplo
         "Total_Sales_SKUs": int(total_sales_SKU),
         "Total_Sales_Rows": int(total_sales_rows),
     }
+
+
 
 @router.post('/uploadStockData/{company_code}/{user_id}', status_code=status.HTTP_201_CREATED)
 async def upload_stock_file(company_code, user_id, stockFiles: UploadFile = File(...)):
