@@ -36,6 +36,11 @@ async def upload_sales_file(company_code, user_id, request: Request, files: Uplo
     df = pd.read_excel(BytesIO(files.file.read()), sheet_name="Sales")  
     df.columns = df.columns.str.strip()
     def checkColumnsinFile():
+
+        if '.xlsx' not in  files.filename:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                    detail="File should be xlsx format, other format will be rejected by system")
+
         if len(df.columns) > 26:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                     detail="File columns shout not less or more than 26 columns")
