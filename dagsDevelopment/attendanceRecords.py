@@ -8,24 +8,24 @@ import urllib
 import sqlalchemy
 import connectionClass
 
-from sqlalchemy.dialects.mssql.pymssql import MSDialect_pymssql
+# from sqlalchemy.dialects.mssql.pymssql import MSDialect_pymssql
 
 
-# conClass = connectionClass
-# pioneerEngine = conClass.pioneerSqlAlchmy()
-# attendance66=conClass.attendanceMachine66()
+conClass = connectionClass
+pioneerEngine = conClass.pioneerSqlAlchmy()
+attendance66=conClass.attendanceMachine66()
 
 vTodayDate = datetime.date(datetime.today())
 vTodayDate = int(vTodayDate.strftime("%d"))
 creationDate = datetime.today()
 
-server = '192.168.130.66'
-db = 'iblgrp'
-user = 'sa'
-password =urllib.parse.quote_plus ('abc@123')
-schema = 'dbo'
-connect_string = f'''mssql+pymssql://{user}:{password}@{server}:1433/{db}'''
-engine = sqlalchemy.create_engine(connect_string)
+# server = '192.168.130.66'
+# db = 'iblgrp'
+# user = 'sa'
+# password =urllib.parse.quote_plus ('abc@123')
+# schema = 'dbo'
+# connect_string = f'''mssql+pymssql://{user}:{password}@{server}:1433/{db}'''
+# engine = sqlalchemy.create_engine(connect_string)
 
 def getBulkRecords():
     api_url = 'http://pioneerattendance.com:94/api/EmployeeData/DateRange/2023-11-01/2023-11-06'
@@ -63,7 +63,7 @@ def getBulkRecords():
     df['record_datetime'] = creationDate
     df.to_sql('attendance_records',
               schema='dbo',
-              con=engine,
+              con=attendance66,
               index=False,
               if_exists='replace'
               )
