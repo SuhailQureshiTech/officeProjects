@@ -1,0 +1,3 @@
+pyarmor obfuscate -h --restrict=0  .\readFranchiseExcel.py
+
+pyarmor gen -O dist2 TESTCODING
