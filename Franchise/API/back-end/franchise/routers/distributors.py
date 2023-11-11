@@ -730,14 +730,14 @@ def get_status(userId, from_date, to_date, db: Session = Depends(database.get_db
         f"""
             select  date, ibl_distributor_code,  total_gross_amount,l.location_name  from (
             select date(franchise_customer_invoice_date),fs2.franchise_code  ibl_distributor_code
-            , sum(gross_amount) as total_gross_amount from franchise."franchise_sales_1" fs2
+            , sum(gross_amount) as total_gross_amount from franchise."franchise_sales" fs2
             where 1=1 and fs2.franchise_code  = '{userId}' and date(fs2.franchise_customer_invoice_date) between '{from_date}' and '{to_date}' 
             group by  fs2.franchise_customer_invoice_date ,fs2.franchise_code 
             union
             select date(dates), '{userId}' as ibl_distributor_code 
             , null as total_gross_amount from generate_series('{from_date}','{to_date}', interval '1 day') as dates
             where dates not in ( select date(franchise_customer_invoice_date) 
-            from franchise."franchise_sales_1" fs2
+            from franchise."franchise_sales" fs2
             where fs2.franchise_code = '{userId}' and date(franchise_customer_invoice_date) between '{from_date}' and '{to_date}' group by  franchise_customer_invoice_date )
             order by 1
             ) fss
@@ -761,6 +761,9 @@ def get_status(db: Session = Depends(database.get_db)):
 
 @router.get('/getStatusSalesForAllDistributors/{from_date}/{to_date}', status_code=status.HTTP_200_OK)
 def get_status_sales_all_distributors(from_date, to_date, db: Session = Depends(database.get_db)):
+    print('suhail')
+    print(from_date)
+    print(to_date)
     db = create_engine(conn_string)
     conn = db.connect()
     fetchDistributorAndSales = pd.read_sql_query(
