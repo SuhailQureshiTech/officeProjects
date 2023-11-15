@@ -689,7 +689,7 @@ async def get_distributor_status(current_date, db: Session = Depends(database.ge
                 franchise.users u
             left join franchise."franchise_sales" fs2 on
                 u.distributor_id = cast(fs2.franchise_code  as varchar)
-            and date(fs2.created_date) = {b}
+            and fs2.franchise_customer_invoice_date = {b}
             inner join franchise.locations l on
                 l.location_id = u.location_id            """, con=conn)
     df_sales['ibl_distributor_code'] = df_sales['ibl_distributor_code'].replace(
@@ -703,7 +703,7 @@ def get_status(userId, from_date, to_date, db: Session = Depends(database.get_db
     conn = db.connect()
     current_date = date.today()
     read_sales = pd.read_sql_query(
-        f"""select * from franchise."franchise_sales_1" fs2 where franchise_code = '{userId}' 
+        f"""select * from franchise."franchise_sales" fs2 where franchise_code = '{userId}' 
             and date(fs2.franchise_customer_invoice_date) between '{from_date}' and '{to_date}'""", con=conn
     )
     print(read_sales)
@@ -724,6 +724,8 @@ def get_status(userId, from_date, to_date, db: Session = Depends(database.get_db
 
 @router.get('/getStatusSalesByInvoiceDate/{userId}/{from_date}/{to_date}', status_code=status.HTTP_200_OK)
 def get_status(userId, from_date, to_date, db: Session = Depends(database.get_db)):
+    # and fs2.franchise_code  = '{userId}' and date(fs2.franchise_customer_invoice_date) between '{from_date}' and '{to_date}' 
+
     db = create_engine(conn_string)
     conn = db.connect()
     read_status_by_invoice_id = pd.read_sql_query(
@@ -731,21 +733,19 @@ def get_status(userId, from_date, to_date, db: Session = Depends(database.get_db
             select  date, ibl_distributor_code,  total_gross_amount,l.location_name  from (
             select date(franchise_customer_invoice_date),fs2.franchise_code  ibl_distributor_code
             , sum(gross_amount) as total_gross_amount from franchise."franchise_sales" fs2
-            where 1=1 and fs2.franchise_code  = '{userId}' and date(fs2.franchise_customer_invoice_date) between '{from_date}' and '{to_date}' 
-            group by  fs2.franchise_customer_invoice_date ,fs2.franchise_code 
-            union
-            select date(dates), '{userId}' as ibl_distributor_code 
-            , null as total_gross_amount from generate_series('{from_date}','{to_date}', interval '1 day') as dates
-            where dates not in ( select date(franchise_customer_invoice_date) 
-            from franchise."franchise_sales" fs2
-            where fs2.franchise_code = '{userId}' and date(franchise_customer_invoice_date) between '{from_date}' and '{to_date}' group by  franchise_customer_invoice_date )
-            order by 1
+            where 1=1
+             and fs2.franchise_code  = '{userId}' 
+             and date(fs2.franchise_customer_invoice_date) between '{from_date}' and '{to_date}' 
+            group by  fs2.franchise_customer_invoice_date ,fs2.franchise_code             
             ) fss
             inner join franchise.users u  on fss.ibl_distributor_code::varchar = u.distributor_id
             inner join franchise.locations l  on u.location_id =l.location_id
         """, con=conn)
     read_status_by_invoice_id['total_gross_amount'] = read_status_by_invoice_id['total_gross_amount'].replace(
         np.nan, 'null')
+    
+    print(read_status_by_invoice_id.info())
+    read_status_by_invoice_id.to_csv('getstatusSales.csv')
     return read_status_by_invoice_id.to_dict(orient="records")
 
 @router.get('/fetchDistributorIdAndLocation', status_code=status.HTTP_200_OK)
