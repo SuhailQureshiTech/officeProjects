@@ -291,6 +291,7 @@ def insertSapSales():
         group by KNUMV,KPOSN
         )
         '''
+        
     update_statement = f'''
         UPDATE PHNX_SALES_DETAIL_DATA_LOG psl
         set (CLAIMABLE_DISCOUNT,UNCLAIMABLE_DISCOUNT,TAX_RECOVERABLE,UNIT_SELLING_PRICE,GROSS_AMOUNT) =

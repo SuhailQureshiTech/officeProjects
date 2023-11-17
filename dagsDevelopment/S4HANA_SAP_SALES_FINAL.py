@@ -1,21 +1,21 @@
 
-# from airflow import DAG
-# from airflow import models
-# import airflow.operators.dummy
-# from airflow.operators.dummy import DummyOperator
-# from airflow.operators.python import PythonOperator
-# from airflow.contrib.operators import gcs_to_bq
-# from airflow.exceptions import AirflowFailException
-# from airflow.providers.google.cloud.operators.bigquery import (
-#     BigQueryCreateEmptyDatasetOperator,
-#     BigQueryDeleteDatasetOperator,
-# )
-# from airflow.providers.google.cloud.transfers.gcs_to_bigquery import GCSToBigQueryOperator
-# from airflow.providers.google.cloud.operators.bigquery import (
-#     BigQueryCreateEmptyDatasetOperator,
-#     BigQueryDeleteDatasetOperator,
-# )
-# from airflow.providers.google.cloud.transfers.gcs_to_bigquery import GCSToBigQueryOperator
+from airflow import DAG
+from airflow import models
+import airflow.operators.dummy
+from airflow.operators.dummy import DummyOperator
+from airflow.operators.python import PythonOperator
+from airflow.contrib.operators import gcs_to_bq
+from airflow.exceptions import AirflowFailException
+from airflow.providers.google.cloud.operators.bigquery import (
+    BigQueryCreateEmptyDatasetOperator,
+    BigQueryDeleteDatasetOperator,
+)
+from airflow.providers.google.cloud.transfers.gcs_to_bigquery import GCSToBigQueryOperator
+from airflow.providers.google.cloud.operators.bigquery import (
+    BigQueryCreateEmptyDatasetOperator,
+    BigQueryDeleteDatasetOperator,
+)
+from airflow.providers.google.cloud.transfers.gcs_to_bigquery import GCSToBigQueryOperator
 # from airflow.contrib.operators.bigquery_operator import BigQueryOperator
 
 
@@ -57,7 +57,6 @@ import os
 from google.oauth2 import service_account
 from google.cloud import bigquery
 
-
 from google.cloud.exceptions import NotFound
 # from sqlalchemy import create_engine
 import pandas_gbq
@@ -73,9 +72,9 @@ import connectionClass
 connection=connectionClass
 sapEngine=connection.sapSandBox2ConnAlchemy()
 
-# storage.blob._DEFAULT_CHUNKSIZE = 5 * 1024* 1024  # 5 MB
-# storage.blob._MAX_MULTIPART_SIZE = 5 * 1024* 1024  # 5 MB
-# os.environ["GOOGLE_APPLICATION_CREDENTIALS"]="/home/airflow/airflow/data-light-house-prod.json"
+storage.blob._DEFAULT_CHUNKSIZE = 5 * 1024* 1024  # 5 MB
+storage.blob._MAX_MULTIPART_SIZE = 5 * 1024* 1024  # 5 MB
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"]="/home/airflow/airflow/data-light-house-prod.json"
 
 today = date.today()
 day_diff=4
@@ -163,8 +162,7 @@ def deleteData():
     sapEngine.execute(del_command)
     sapEngine.execute(del_command1)
     sapEngine.execute(del_command2)
-    
-
+   
 def insertSapSales():
     print('today :',today)
     print('end date data : ', vEndDate)
@@ -499,7 +497,6 @@ def checkSapData():
         raise AirflowFailException('Merging already done')
     else:
         print('Merging pending.....')
-
 
 # checkConnection()
 deleteData()

@@ -33,7 +33,7 @@ def getSpecChars():
 #Initialize your connection
 def sapConn():
     conn = dbapi.connect(
-        address='10.210.134.204',
+        address='10.210.134.43',
         port='33015',
         user='Etl',
         password='EtlIbl12345' )
@@ -148,6 +148,6 @@ def attendanceMachine66():
     user = 'sa'
     password =urllib.parse.quote_plus ('abc@123')
     schema = 'dbo'
-    connect_string = f'''mssql+pymssql://{user}:{password}@{server}:1433/{db}'''
+    connect_string = f'''mssql+psycopg2://{user}:{password}@{server}:1433/{db}'''
     engine = sqlalchemy.create_engine(connect_string)
     return engine
