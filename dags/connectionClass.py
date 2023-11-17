@@ -33,7 +33,7 @@ def getSpecChars():
 #Initialize your connection
 def sapConn():
     conn = dbapi.connect(
-        address='10.210.134.204',
+        address='10.210.134.43',
         port='33015',
         user='Etl',
         password='EtlIbl12345' )

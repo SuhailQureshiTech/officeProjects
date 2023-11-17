@@ -147,8 +147,8 @@ sap_sale_merging = DAG(
     start_date=datetime(year=2023, month=8, day=10),
     # run this dag at 2 hours 30 min interval from 00:00 28-03-2017
     catchup=False,
-    # schedule_interval=None,
-    schedule_interval='*/30 3-4 * * *',
+    schedule_interval=None,
+    # schedule_interval='*/30 3-4 * * *',
     dagrun_timeout=timedelta(minutes=120)
 )
 
