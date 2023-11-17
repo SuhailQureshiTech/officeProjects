@@ -1,29 +1,31 @@
 import pandas as pd
 from connectionClass import FranchiseAlchmy
+import numpy as np
 
 franchiseEngine=FranchiseAlchmy()
 
 df=pd.DataFrame()
 
-df=pd.read_csv('finalMissingCust.csv',index_col=False)
-df.to_sql('missing_customers',con=franchiseEngine
-          ,schema='franchise'
-            ,if_exists='replace')
+read_status_by_invoice_id = pd.read_sql_query(
+        f"""
+            select  date, ibl_distributor_code,  total_gross_amount,l.location_name  from (
+            select date(franchise_customer_invoice_date),fs2.franchise_code  ibl_distributor_code
+            , sum(gross_amount) as total_gross_amount from franchise."franchise_sales" fs2
+            where 1=1
+              and fs2.franchise_code  = '2000217691' and date(fs2.franchise_customer_invoice_date) between '2023-11-01' and '2023-11-14' 
+            group by  fs2.franchise_customer_invoice_date ,fs2.franchise_code             
+            ) fss
+            inner join franchise.users u  on fss.ibl_distributor_code::varchar = u.distributor_id
+            inner join franchise.locations l  on u.location_id =l.location_id
+        """, con=franchiseEngine)
 
-# df=pd.read_csv('AugustFranchise.csv',index_col=False,low_memory=False)
-# print(df.info())
-# df.columns = ('franchise_customer_order_no', 'franchise_customer_invoice_date'
-#                 , 'franchise_customer_invoice_number', 'channel', 'franchise_code'
-#                 , 'franchise_customer_number', 'ibl_customer_number'
-#                 , 'rd_customer_name', 'ibl_customer_name', 'customer_address'
-#                 , 'franchise_item_code', 'ibl_item_code', 'franchise_item_description', 'ibl_item_description'
-#                   , 'quantity_sold', 'gross_amount', 'reason', 'foc', 'batch_no', 'price', 'bon_qty'
-#                 , 'disc_amt', 'net_amt', 'discounted_rate', 'brick_code', 'brick_name'
-#                   )
-# print(df.info())
-# df.to_sql('franchise_sales',con=franchiseEngine
-#           ,schema='franchise',index=False
-#             ,if_exists='append')
+read_status_by_invoice_id['total_gross_amount'] = read_status_by_invoice_id['total_gross_amount'].replace(
+        np.nan, 'null')
 
+read_status_by_invoice_id.to_csv('getstatusSales.csv')   
+print(read_status_by_invoice_id.info())
+print(
+    read_status_by_invoice_id.to_dict(orient="records")
+)
 
 print('done....')
