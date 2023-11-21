@@ -124,6 +124,8 @@ bigQueryClient = bigquery.Client()
 storage.blob._DEFAULT_CHUNKSIZE = 5*1024*1024  # 5 MB
 storage.blob._MAX_MULTIPART_SIZE = 5*1024*1024 # 5 MB
 
+oracleTable='ebs_invoice_order'
+
 vStartDate = None
 vEndDate = None
 
@@ -182,20 +184,15 @@ franchise_sale_merging = DAG(
 
 
 def delRecords():  
-
-    oracleTable='esb_invoice_order'
     delQuery=f''' 
                 delete from {oracleTable} 
-                    where 1=1 and invoice_date_ibl between '01-Aug-23' and '30-Sep-23'
+                    where 1=1 and invoice_date_ibl between '01-Jul-23' and '20-Nov-23'
             '''
 
     oracleAlchemy.execute(delQuery)
     print('done.....................')
 
 def getEbsInvoiceOrderDataDfSql():
-    
-    oracleTable='esb_invoice_order'
-
     sqlData=f'''SELECT
                 institution,
                 branch_id,
@@ -221,7 +218,7 @@ def getEbsInvoiceOrderDataDfSql():
                 tax_recoverable,
                 customer_trx_id            
                 FROM data-light-house-prod.EDW.EBS_INVOICE_ORDER_VW 
-                where 1=1 and invoice_date_ibl between '2023-08-01' and '2023-09-30'                
+                where 1=1 and invoice_date_ibl between '2023-07-01' and '2023-11-20'                
             '''
     
     df=pd.DataFrame()   
@@ -270,7 +267,7 @@ taskInsertingRecords=PythonOperator(
                 )
 
 # delRecords()
-# getEbsInvoiceOrderDataDfSql()
+getEbsInvoiceOrderDataDfSql()
 
 
 # taskDeleteRecrods>>taskInsertingRecords

@@ -70,7 +70,6 @@ from airflow.contrib.operators.bigquery_operator import BigQueryOperator
 from io import StringIO
 import sqlalchemy
 import connectionClass
-from suhailLib import returnDataDate
 connection=connectionClass
 sapConnection=connection.sapConn()
 
@@ -78,52 +77,33 @@ storage.blob._DEFAULT_CHUNKSIZE = 5 * 1024* 1024  # 5 MB
 storage.blob._MAX_MULTIPART_SIZE = 5 * 1024* 1024  # 5 MB
 
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"]="/home/airflow/airflow/data-light-house-prod.json"
+today = date.today()
+day_diff=4
+past_date = today - pd.DateOffset(days=day_diff)
+d1 = past_date.strftime("%Y-%m-%d")
+df = pd.DataFrame()
+df1=pd.DataFrame()
 # verify the architecture of Python
 # print("Platform architecture: " + platform.architecture()[0])
-
-
-
-# day_diff=4
-
 today = date.today()
-# past_date = today - pd.DateOffset(days=day_diff)
-d1 = today.strftime("%Y%m%d")
 
-# df = pd.DataFrame()
-# df1=pd.DataFrame()
+vEndDate = datetime.date(
+    datetime.today()-timedelta(days=day_diff)).strftime("%Y%m%d")
+vMaxDate = datetime.date(datetime.today()-timedelta(days=1)).strftime("%Y%m%d")
 
-# today = date.today()
+vEndDate1 = datetime.date(
+    datetime.today()-timedelta(days=day_diff)).strftime("%Y-%m-%d")
 
-# vEndDate = datetime.date(
-#     datetime.today()-timedelta(days=day_diff)).strftime("%Y%m%d")
-# vMaxDate = datetime.date(datetime.today()-timedelta(days=1)).strftime("%Y%m%d")
+vMaxDate1 = datetime.date(
+    datetime.today()-timedelta(days=1)).strftime("%Y-%m-%d")
 
-# vEndDate1 = datetime.date(
-#     datetime.today()-timedelta(days=day_diff)).strftime("%Y-%m-%d")
+vEndDate = "'"+vEndDate+"'"
+vMaxDate = "'"+vMaxDate+"'"
 
-# vMaxDate1 = datetime.date(
-#     datetime.today()-timedelta(days=1)).strftime("%Y-%m-%d")
+vEndDate1 = "'"+vEndDate1+"'"
+vMaxDate1 = "'"+vMaxDate1+"'"
 
-# vEndDate = "'"+vEndDate+"'"
-# vMaxDate = "'"+vMaxDate+"'"
-
-# vEndDate1 = "'"+vEndDate1+"'"
-# vMaxDate1 = "'"+vMaxDate1+"'"
-
-day_diff=4
-vStartDate,vEndDate=returnDataDate(day_diff)
-vStartSapDate=vStartDate.strftime("%Y%m%d")
-vEndSapDate=vEndDate.strftime("%Y%m%d")
-
-vStartDate="'"+str(vStartDate)+"'"
-vEndDate="'"+str(vEndDate)+"'"
-# print(vStartDate,vEndDate)
-
-vStartSapDate="'"+str(vStartSapDate)+"'"
-vEndSapDate="'"+str(vEndSapDate)+"'"
-# print(vStartSapDate,vEndSapDate)
-
-bigQueryTable ='data-light-house-prod.EDW.IBL_SALES'
+bigQueryTable='data-light-house-prod.EDW.IBL_GROUP_SALE'
 
 # Initialize your connection
 
@@ -144,9 +124,8 @@ params = urllib.parse.quote_plus("DRIVER={SQL Server Native Client 11.0};"
 
 cursor = conn.cursor()
 
-del_command = f'''DELETE FROM PHNX_SALES_DETAIL_DATA '''
-del_command1 = f'''DELETE FROM PHNX_SALES_DATA '''
-del_command2 = f'''DELETE FROM phnx_sales_data_tmp_konv '''
+del_command = f'''DELETE FROM GROUP_SALES_DETAIL_DATA '''
+del_command1 = f'''DELETE FROM GROUP_SALES_DATA_TMP_KONV '''
 
 default_args = {
     'owner': 'admin',
@@ -160,7 +139,7 @@ default_args = {
 }
 
 sap_sale_merging = DAG(
-    dag_id='S4Hana_Sap_Sales',
+    dag_id='S4Hana_Sap_Group_Sales',
     # start date:28-03-2017
     start_date=datetime(year=2023, month=8, day=10),
     # run this dag at 2 hours 30 min interval from 00:00 28-03-2017
@@ -174,7 +153,6 @@ sap_sale_merging = DAG(
 def deleteData():
     cursor.execute(del_command)
     cursor.execute(del_command1)
-    cursor.execute(del_command2)
 
 delDataTask = PythonOperator(
         task_id='delete_data_from_Sap_tables',
@@ -184,8 +162,10 @@ delDataTask = PythonOperator(
 
 def insertSapSales():
     print('today :',today)
-    print('startDate  :   ', vStartSapDate)
-    print('end date  :   ', vEndSapDate)
+    print('end date data : ', vEndDate)
+    print('vmaxDate  :   ', vMaxDate)
+    print('vendate1  :   ', vEndDate1)
+    print('vmaxDate1  :   ', vMaxDate1)
 
     insert_command1 = f'''
     INSERT INTO PHNX_SALES_DETAIL_DATA
@@ -254,11 +234,12 @@ def insertSapSales():
         INNER JOIN SAPABAP1.VBAP ON (VBRP.AUBEL = VBAP.VBELN and VBRP.AUPOS = VBAP.POSNR)
         left outer join SAPABAP1.TVFKT on ("VBRK"."FKART" = "TVFKT"."FKART" and "TVFKT"."SPRAS"='E')
         left outer join SAPABAP1.TVAPT on ("VBRP"."PSTYV" = "TVAPT"."PSTYV" and "TVAPT"."SPRAS" ='E' )
-        where 1 = 1 
-        and "FKDAT"  between  {vStartSapDate} and {vEndSapDate}
+        where
+            1 = 1   and "FKDAT"  between  '20231112' and '20231116'
                     and "VBRK"."VKORG" in ('6300', '6100') and "VBRK"."FKART" in ( 'ZOPC', 'ZOCC', 'ZUBC', 'ZUCC', 'ZORE', 'ZORC', 'ZURB', 'ZUB1', 'ZNES', 'ZNEC'
                     )
                 '''
+            # 1 = 1   and "FKDAT"  between  {vEndDate} and {vMaxDate}
 
     insert_command2 = f'''
         INSERT INTO phnx_sales_data_tmp_konv
@@ -465,8 +446,8 @@ def loadDataGcs():
     GCS_PROJECT = 'data-light-house-prod'
     GCS_BUCKET = 'ibloper'
     storage_client = storage.Client.from_service_account_json(
-        r'/home/airflow/airflow/data-light-house-prod.json' )
-    
+        r'/home/airflow/airflow/data-light-house-prod.json'
+        )
     client = storage.Client(project=GCS_PROJECT)
     bucket = client.get_bucket(GCS_BUCKET)
     filename = f'IBL_SALES_{d1}'
@@ -484,20 +465,23 @@ LoadSalesDataGcsTask = PythonOperator(
 )
 
 def checkSapData():
-    print('from date :',vStartSapDate)
-    print('end  date :',vEndSapDate)
-
+    print('end date: ', vEndDate)
+    print('end date maxDate: ', vMaxDate)
+    print('end date - vMaxDate1: ', vMaxDate1)
+    # credentialsData = os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "/home/admin2/airflow/dags/Google_cloud/data-light-house-prod-0baa98f57152.json"
     credentials = service_account.Credentials.from_service_account_file(
         '/home/airflow/airflow/data-light-house-prod.json'
         )
 
     project_id = 'data-light-house-prod'
     table_id = 'data-light-house-prod.EDW.IBL_SALES'
+    # pandas_gbq.context.credentials = credentials
 
     client = bigquery.Client(credentials=credentials, project=project_id)
     recCount = f''' select * from {bigQueryTable}
-                    where billing_date={vEndDate} limit 1 
+                    where billing_date={vMaxDate1} limit 1 
                     '''
+                    # where billing_date={vMaxDate1} limit 1 
 
     df = pandas_gbq.read_gbq(
         recCount, credentials=credentials,  project_id=project_id)
@@ -526,11 +510,10 @@ Delete_From_BQ = BigQueryOperator(
 
     sql=f'''
         delete from {bigQueryTable}
-        where Billing_date between {vStartDate} and {vEndDate} and company_code in ('6300','6100')  
-        '''
+        where Billing_date between '2023-11-12' and '2023-11-16' and company_code in ('6300','6100')
+        ''',
         # where Billing_date between {vEndDate1} and {vMaxDate1} and company_code in ('6300','6100')
-        ,dag=sap_sale_merging
-        )
+    dag=sap_sale_merging)
 
 Load_sale_data_gcs_to_bq = GCSToBigQueryOperator(
     task_id='Load_sale_data_gcs_to_bq',
