@@ -81,34 +81,8 @@ os.environ["GOOGLE_APPLICATION_CREDENTIALS"]="/home/airflow/airflow/data-light-h
 # verify the architecture of Python
 # print("Platform architecture: " + platform.architecture()[0])
 
-
-
-# day_diff=4
-
 today = date.today()
-# past_date = today - pd.DateOffset(days=day_diff)
 d1 = today.strftime("%Y%m%d")
-
-# df = pd.DataFrame()
-# df1=pd.DataFrame()
-
-# today = date.today()
-
-# vEndDate = datetime.date(
-#     datetime.today()-timedelta(days=day_diff)).strftime("%Y%m%d")
-# vMaxDate = datetime.date(datetime.today()-timedelta(days=1)).strftime("%Y%m%d")
-
-# vEndDate1 = datetime.date(
-#     datetime.today()-timedelta(days=day_diff)).strftime("%Y-%m-%d")
-
-# vMaxDate1 = datetime.date(
-#     datetime.today()-timedelta(days=1)).strftime("%Y-%m-%d")
-
-# vEndDate = "'"+vEndDate+"'"
-# vMaxDate = "'"+vMaxDate+"'"
-
-# vEndDate1 = "'"+vEndDate1+"'"
-# vMaxDate1 = "'"+vMaxDate1+"'"
 
 day_diff=4
 vStartDate,vEndDate=returnDataDate(day_diff)
@@ -117,15 +91,11 @@ vEndSapDate=vEndDate.strftime("%Y%m%d")
 
 vStartDate="'"+str(vStartDate)+"'"
 vEndDate="'"+str(vEndDate)+"'"
-# print(vStartDate,vEndDate)
 
 vStartSapDate="'"+str(vStartSapDate)+"'"
 vEndSapDate="'"+str(vEndSapDate)+"'"
-# print(vStartSapDate,vEndSapDate)
 
 bigQueryTable ='data-light-house-prod.EDW.IBL_SALES'
-
-# Initialize your connection
 
 utc = timezone.utc
 date = datetime.now(utc)
