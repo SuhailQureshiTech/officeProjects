@@ -65,13 +65,6 @@ from sqlalchemy.dialects.oracle import (
     VARCHAR2
 )
 
-# from sqlalchemy import create_engine
-# import pandas_gbq
-
-# from pymysql import Date
-# from pymysql import Date
-# from pydantic import FilePath
-
 import pysftp
 import csv
 import pyodbc
@@ -130,18 +123,15 @@ vStartDate = None
 vEndDate = None
 
 vStartDate,vEndDate=returnDataDate()
+vStartDate="'"+str(vStartDate.strftime("%d-%b-%Y"))+"'"
+vEndDate="'"+str(vEndDate.strftime("%d-%b-%Y"))+"'"
+
 creationDate = datetime.today()
 now = datetime.now()
 current_time = now.time()
 
 print('else : from date :', vStartDate)
 print('else : enmd date :', vEndDate)
-
-v=vStartDate
-
-print('else : from date :', v.strftime('%d-%b-%Y'))
-
-
 
 
 # def success_function(context):
@@ -169,8 +159,8 @@ default_args = {
     'gcp_conn_id': 'google_cloud_default'
 }
 
-franchise_sale_merging = DAG(
-    dag_id='franchiseSalesMergingNewData',
+EBS_INVOICE_ORDER = DAG(
+    dag_id='EBS_INVOICE_ORDER',
     default_args=default_args,
     catchup=False,
     start_date=datetime(2023, 2, 27),
@@ -257,17 +247,17 @@ def getEbsInvoiceOrderDataDfSql():
 taskDeleteRecrods=PythonOperator(
                 task_id='deletingRecords'
                 ,python_callable=delRecords
-                ,dag=franchise_sale_merging
+                ,dag=EBS_INVOICE_ORDER
                 )
 
 taskInsertingRecords=PythonOperator(
                 task_id='insertingInvoiceRecords'
                 ,python_callable=getEbsInvoiceOrderDataDfSql
-                ,dag=franchise_sale_merging
+                ,dag=EBS_INVOICE_ORDER
                 )
 
 # delRecords()
-getEbsInvoiceOrderDataDfSql()
+# getEbsInvoiceOrderDataDfSql()
 
 
 # taskDeleteRecrods>>taskInsertingRecords

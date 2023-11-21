@@ -72,14 +72,35 @@ from airflow.providers.google.cloud.transfers.gcs_to_bigquery import GCSToBigQue
 from io import StringIO
 import sqlalchemy
 import cx_Oracle as xo
+from sqlalchemy.dialects.oracle import (
+    BFILE,
+    BLOB,
+    CHAR,
+    CLOB,
+    DATE,
+    DOUBLE_PRECISION,
+    FLOAT,
+    INTERVAL,
+    LONG,
+    NCLOB,
+    NCHAR,
+    NUMBER,
+    NVARCHAR,
+    NVARCHAR2,
+    RAW,
+    TIMESTAMP,
+    VARCHAR,
+    VARCHAR2
+)
 import connectionClass
 from suhailLib import returnDataDate
-
+from google.auth._service_account_info import()
 connection=connectionClass
 sapConnection=connection.sapConn()
 conn=sapConnection
 
 oracleConnectionDB=connection.oracleIlgrpHcm()
+oracleAlchemy=connection.oracleIblGrpHcmAlchmy()
 oracleCursor=oracleConnectionDB.cursor()
 
 oracleTable='EBS_INVOICE_DATA_TBL'
@@ -90,6 +111,11 @@ storage.blob._DEFAULT_CHUNKSIZE = 5 * 1024* 1024  # 5 MB
 storage.blob._MAX_MULTIPART_SIZE = 5 * 1024* 1024  # 5 MB
 
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"]="/home/airflow/airflow/data-light-house-prod.json"
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"]="/home/airflow/airflow/data-light-house-prod.json"
+credential_file="/home/airflow/airflow/data-light-house-prod.json"
+credentials=Credentials.from_service_account_file(credential_file)
+
+bigQueryClient = bigquery.Client()
 today = date.today()
 
 # global df
@@ -98,9 +124,23 @@ df = pd.DataFrame()
 df1=pd.DataFrame()
 
 vStartDate,vEndDate=returnDataDate()
+vStartOracleDate=vStartDate.strftime("%d-%b-%Y")
+vEndOracleDate=vEndDate.strftime("%d-%b-%Y")
+
+vStartDate="'"+str(vStartDate)+"'"
+vEndDate="'"+str(vEndDate)+"'"
+
+vStartOracleDate="'"+str(vStartOracleDate)+"'"
+vEndOracleDate="'"+str(vEndOracleDate)+"'"
+
 
 print('Start Date : ', vStartDate)
 print('End   Date : ', vEndDate)
+
+print('Start Date Oracle: ', vStartOracleDate)
+print('End   Date Oracle: ', vEndOracleDate)
+
+
 
 # Initialize your connection
 
@@ -329,10 +369,83 @@ generateCustomerFileData=PythonOperator(
                     ,dag=searle_merging
                 )
 
+def delRecords(): 
+    oracleTable='ebs_invoice_order' 
+    delQuery=f''' 
+                delete from {oracleTable} 
+                    where 1=1 and invoice_date_ibl between {vStartOracleDate} and {vEndOracleDate}
+            '''
+
+    oracleAlchemy.execute(delQuery)
+    print('done.....................')
+
+def getEbsInvoiceOrderDataDfSql():    
+    sqlData=f'''SELECT
+                institution,
+                branch_id,
+                branch_name,
+                distributor,
+                ins_type,
+                item_code,
+                sku,
+                selling_price,
+                claimable_discount,
+                un_claimable_discount,
+                inst_discount,
+                month,
+                order_ref_no,
+                date_of_order,
+                order_quantity,
+                foc,
+                total_qty,
+                sales_vlaue,
+                (sales_vlaue+inst_discount)+tax_recoverable net_sale_value,
+                invoice_date_ibl,
+                invoice_no_ibl,
+                tax_recoverable,
+                customer_trx_id            
+                FROM data-light-house-prod.EDW.EBS_INVOICE_ORDER_VW 
+                where 1=1 and invoice_date_ibl between {vStartDate} and {vEndDate}
+            '''
+    
+    df=pd.DataFrame()   
+    df = bigQueryClient.query(sqlData).to_dataframe()
+
+    oracle_dtypes = {
+            'institution'   :VARCHAR2(250),
+            'branch_id'     :VARCHAR2(250),
+            'branch_name'   :VARCHAR2(250),
+            'distributor'   :VARCHAR2(250),
+            'ins_type'      :VARCHAR2(250),
+            'item_code'     :VARCHAR2(250),
+            'sku'           :VARCHAR2(250),
+            'selling_price' :FLOAT,
+            'claimable_discount'    :FLOAT,
+            'un_claimable_discount' :FLOAT,
+            'inst_discount'         :FLOAT,
+            'month'                 :VARCHAR2(15),
+            'order_ref_no'          :VARCHAR2(15),
+            'date_of_order'         :DATE,
+            'order_quantity'        :FLOAT,
+            'foc'                   :FLOAT,
+            'total_qty'             :FLOAT,
+            'sales_vlaue'           :FLOAT,
+            'net_sale_value'        :FLOAT,
+
+            'invoice_date_ibl'      :DATE,
+            'invoice_no_ibl'        :VARCHAR2(50),
+            'tax_recoverable'       :FLOAT,
+            'customer_trx_id'       :VARCHAR2(25)             
+             }
+    print(df)
+    df.to_sql(oracleTable,schema='IBLGRPHCM',if_exists='append',con=oracleAlchemy,index=False,dtype=oracle_dtypes)
+    print('done.....................')
+
+
 # deleteRecords()
 # insertIblgrpHcmData()
-QueryBigQuerySalesData()
-QueryBigQueryCustomerData()
+# QueryBigQuerySalesData()
+# QueryBigQueryCustomerData()
 
 [
     deleteInvoiceData>>insertInvoiceData
