@@ -103,7 +103,7 @@ class ftpUploadDirTransfer():
 
         print('File transfer completed successfully...')
 
-def returnDataDate():
+def returnDataDate(pDay=1):
     vStartDate=None
     vEndDate=None
     from datetime import date, datetime, timedelta
@@ -129,9 +129,16 @@ def returnDataDate():
         vEndDate = date(today.year, today.month, 1) - relativedelta(days=1)
 
     else:
-        print('else')
-        vStartDate = datetime.date(datetime.today().replace(day=1))
-        vEndDate = datetime.date(datetime.today()-timedelta(days=1))
+        if pDay==1:
+            print('else')
+            vStartDate = datetime.date(datetime.today().replace(day=1))
+            vEndDate = datetime.date(datetime.today()-timedelta(days=1))
+        else:
+            print('new pday : ',pDay)
+            vStartDate = datetime.date(datetime.today()-timedelta(days=pDay))
+            vEndDate = datetime.date(datetime.today()-timedelta(days=1))
+
+
 
     # print('Start Date : ', vStartDate)
     # print('End   Date : ', vEndDate)
