@@ -121,7 +121,7 @@ vStartDate=None
 vEndDate=None
 
 vStartDate,vEndDate=returnDataDate()
-vStartDate=int(vStartDate.strftime('%Y%m%d'))+1
+vStartDate=int(vStartDate.strftime('%Y%m%d'))
 vEndDate=int(vEndDate.strftime('%Y%m%d'))
 # vStartDate=2023-
 print(vStartDate,vEndDate)
