@@ -5,10 +5,13 @@ import pandas as pd
 from google.cloud import storage
 import os
 from google.oauth2 import service_account
+from urllib.parse import quote
+import urllib
 from sqlalchemy import create_engine
 import sqlalchemy
 import pyodbc
-# import cx_Oracle as xo
+import cx_Oracle as xo
+
 
 #verify the architecture of Python
 print ("Platform architecture: " + platform.architecture()[0])
@@ -36,10 +39,8 @@ def sapConn():
         password='EtlIbl12345' )
     return conn
 
-
 def s4HanaConnection():
     conn = dbapi.connect(
-
         address='10.210.134.205',
         port='33015',
         user='Etl',
@@ -86,23 +87,23 @@ def markittSqlServerAlchmy():
     engine = sqlalchemy.create_engine(connect_string)
     return engine
 
-# def oracleIblGrpHcmAlchmy(): 
-#     DIALECT = 'oracle'
-#     SQL_DRIVER = 'cx_oracle'
-#     USERNAME = 'IBLGRPHCM' #enter your username
-#     PASSWORD = 'iblgrp106hcm' #enter your password
-#     HOST = 'Sap-Router-e416ea262b67e5f4.elb.ap-southeast-1.amazonaws.com' #enter the oracle db host url
-#     PORT = 6464 # enter the oracle port number
-#     SERVICE = 'cdb1' # enter the oracle db service name
-#     ENGINE_PATH_WIN_AUTH = DIALECT + '+' + SQL_DRIVER + '://' + USERNAME + ':' + PASSWORD +'@' + HOST + ':' + str(PORT) + '/?service_name=' + SERVICE
+def oracleIblGrpHcmAlchmy(): 
+    DIALECT = 'oracle'
+    SQL_DRIVER = 'cx_oracle'
+    USERNAME = 'IBLGRPHCM' #enter your username
+    PASSWORD = 'iblgrp106hcm' #enter your password
+    HOST = 'Sap-Router-e416ea262b67e5f4.elb.ap-southeast-1.amazonaws.com' #enter the oracle db host url
+    PORT = 6464 # enter the oracle port number
+    SERVICE = 'cdb1' # enter the oracle db service name
+    ENGINE_PATH_WIN_AUTH = DIALECT + '+' + SQL_DRIVER + '://' + USERNAME + ':' + PASSWORD +'@' + HOST + ':' + str(PORT) + '/?service_name=' + SERVICE
 
-#     engine = create_engine(ENGINE_PATH_WIN_AUTH)
-#     return engine
+    engine = create_engine(ENGINE_PATH_WIN_AUTH)
+    return engine
 
-# def oracleIlgrpHcm():
-#     oracleConnectionDB = xo.connect('IBLGRPHCM', 'iblgrp106hcm',
-#                         xo.makedsn('Sap-Router-e416ea262b67e5f4.elb.ap-southeast-1.amazonaws.com', 6464, 'cdb1'))
-#     return oracleConnectionDB
+def oracleIlgrpHcm():
+    oracleConnectionDB = xo.connect('IBLGRPHCM', 'iblgrp106hcm',
+                        xo.makedsn('Sap-Router-e416ea262b67e5f4.elb.ap-southeast-1.amazonaws.com', 6464, 'cdb1'))
+    return oracleConnectionDB
 
 def FranchiseAlchmy():
 
@@ -127,7 +128,8 @@ def pioneerSqlAlchmy():
     engine = sqlalchemy.create_engine(connect_string)
     return engine
 
-# def lorealConnectionAlchemy():
+
+def lorealConnectionAlchemy():
     DIALECT = 'oracle'
     SQL_DRIVER = 'cx_oracle'
     USERNAME = 'loreal1' #enter your username
@@ -138,4 +140,14 @@ def pioneerSqlAlchmy():
     ENGINE_PATH_WIN_AUTH = DIALECT + '+' + SQL_DRIVER + '://' + USERNAME + ':' + PASSWORD +'@' + HOST + ':' + str(PORT) + '/?service_name=' + SERVICE
 
     engine =sqlalchemy.create_engine(ENGINE_PATH_WIN_AUTH)
+    return engine
+
+def attendanceMachine66():
+    server = '192.168.130.66'
+    db = 'iblgrp'
+    user = 'sa'
+    password =urllib.parse.quote_plus ('abc@123')
+    schema = 'dbo'
+    connect_string = f'''mssql+psycopg2://{user}:{password}@{server}:1433/{db}'''
+    engine = sqlalchemy.create_engine(connect_string)
     return engine
