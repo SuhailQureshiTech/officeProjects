@@ -703,9 +703,15 @@ def get_status(userId, from_date, to_date, db: Session = Depends(database.get_db
     conn = db.connect()
     current_date = date.today()
     read_sales = pd.read_sql_query(
-        f"""select * from franchise."franchise_sales" fs2 where franchise_code = '{userId}' 
-            and date(fs2.franchise_customer_invoice_date) between '{from_date}' and '{to_date}'""", con=conn
+        f"""select 
+        franchise_customer_invoice_date,franchise_customer_number ,rd_customer_name 
+        ,sum(quantity_sold)quantity_sold ,sum(bon_qty)bon_qty ,sum(foc)foc,sum(gross_amount)gross_amount 
+           from franchise."franchise_sales" fs2 where franchise_code = '{userId}' 
+            and date(fs2.franchise_customer_invoice_date) between '{from_date}' and '{to_date}'
+              group by franchise_customer_invoice_date,franchise_customer_number ,rd_customer_name 
+            """, con=conn
     )
+    read_sales = read_sales.fillna('')
     print(read_sales)
     return read_sales.to_dict(orient='records')
 
@@ -716,16 +722,18 @@ def get_status(userId, from_date, to_date, db: Session = Depends(database.get_db
     current_date = date.today()
     print('date', userId)
     read_stock = pd.read_sql_query(
-        f"""select * from franchise."franchise_stock" fs2 
+        f"""select 
+         ibl_distributor_code
+           from franchise."franchise_stock" fs2 
         where ibl_distributor_code = '{userId}' and dated between '{from_date}' and '{to_date}';""", con=conn
     )
-    print(read_stock)
+    # print(read_stock)
     return read_stock.to_dict(orient='records')
 
 @router.get('/getStatusSalesByInvoiceDate/{userId}/{from_date}/{to_date}', status_code=status.HTTP_200_OK)
 def get_status(userId, from_date, to_date, db: Session = Depends(database.get_db)):
     # and fs2.franchise_code  = '{userId}' and date(fs2.franchise_customer_invoice_date) between '{from_date}' and '{to_date}' 
-
+    print('chikkoo....')
     db = create_engine(conn_string)
     conn = db.connect()
     read_status_by_invoice_id = pd.read_sql_query(
@@ -747,6 +755,7 @@ def get_status(userId, from_date, to_date, db: Session = Depends(database.get_db
     print(read_status_by_invoice_id.info())
     read_status_by_invoice_id.to_csv('getstatusSales.csv')
     return read_status_by_invoice_id.to_dict(orient="records")
+
 
 @router.get('/fetchDistributorIdAndLocation', status_code=status.HTTP_200_OK)
 def get_status(db: Session = Depends(database.get_db)):
