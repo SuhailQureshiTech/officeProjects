@@ -176,7 +176,7 @@ EBS_INVOICE_ORDER = DAG(
 def delRecords():  
     delQuery=f''' 
                 delete from {oracleTable} 
-                    where 1=1 and invoice_date_ibl between '01-Jul-23' and '20-Nov-23'
+                    where 1=1 and invoice_date_ibl between '01-Jul-23' and '22-Nov-23'
             '''
 
     oracleAlchemy.execute(delQuery)
@@ -208,7 +208,7 @@ def getEbsInvoiceOrderDataDfSql():
                 tax_recoverable,
                 customer_trx_id            
                 FROM data-light-house-prod.EDW.EBS_INVOICE_ORDER_VW 
-                where 1=1 and invoice_date_ibl between '2023-07-01' and '2023-11-20'                
+                where 1=1 and invoice_date_ibl between '2023-07-01' and '2023-11-23'                
             '''
     
     df=pd.DataFrame()   
@@ -244,20 +244,20 @@ def getEbsInvoiceOrderDataDfSql():
     df.to_sql(oracleTable,schema='IBLGRPHCM',if_exists='append',con=oracleAlchemy,index=False,dtype=oracle_dtypes)
     print('done.....................')
 
-taskDeleteRecrods=PythonOperator(
-                task_id='deletingRecords'
-                ,python_callable=delRecords
-                ,dag=EBS_INVOICE_ORDER
-                )
+# taskDeleteRecrods=PythonOperator(
+#                 task_id='deletingRecords'
+#                 ,python_callable=delRecords
+#                 ,dag=EBS_INVOICE_ORDER
+#                 )
 
-taskInsertingRecords=PythonOperator(
-                task_id='insertingInvoiceRecords'
-                ,python_callable=getEbsInvoiceOrderDataDfSql
-                ,dag=EBS_INVOICE_ORDER
-                )
+# taskInsertingRecords=PythonOperator(
+#                 task_id='insertingInvoiceRecords'
+#                 ,python_callable=getEbsInvoiceOrderDataDfSql
+#                 ,dag=EBS_INVOICE_ORDER
+#                 )
 
-# delRecords()
-# getEbsInvoiceOrderDataDfSql()
+delRecords()
+getEbsInvoiceOrderDataDfSql()
 
 
 # taskDeleteRecrods>>taskInsertingRecords

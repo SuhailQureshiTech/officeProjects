@@ -176,7 +176,7 @@ franchise_sale_merging = DAG(
 
 def deleteRecords():
     delQuery=f'''delete from data-light-house-prod.EDW.FRANCHISE_SALES_NEW
-                    where invoice_date  between '2023-09-01' and '2023-09-30' 
+                    where invoice_date  between '2023-10-01' and '2023-10-31' 
       '''
     job=bigQueryClient.query(delQuery)
     job.result()
@@ -209,7 +209,7 @@ def getFranchiseDataParqeet():
                 cast(to_char(record_date,'yyyymmdd')  as numeric) as record_date,
                 brick_code,brick_name
             from franchise.franchise_data fd     
-            where 1=1 and invoice_date between '2023-08-01' and '2023-08-31'
+            where 1=1 and invoice_date between  '2023-10-01' and '2023-10-31' 
             '''
 
     # dataFile=f'''{filePath}franchiseData.parquet'''
@@ -336,7 +336,7 @@ def getFranchiseDataDfSql():
                 cast(to_char(record_date,'yyyymmdd')  as numeric) as record_date,
                 brick_code,brick_name
             from franchise.franchise_data fd     
-            where 1=1 and invoice_date between '2023-09-01' and '2023-09-30'
+            where 1=1 and invoice_date between '2023-10-01' and '2023-10-31' 
             '''
 
     franchiseDf=pd.read_sql(sqlData,con=franchiseEngine)
@@ -416,18 +416,18 @@ def getFranchiseDataDfSql():
 deleteRecords() 
 getFranchiseDataDfSql()
 
-taskDeleteRecrods=PythonOperator(
-                task_id='deletingRecords'
-                ,python_callable=deleteRecords
-                ,dag=franchise_sale_merging
-                )
-taskInsertingRecords=PythonOperator(
-                task_id='insertingRecords'
-                ,python_callable=getFranchiseDataDfSql
-                ,dag=franchise_sale_merging
-                )
+# taskDeleteRecrods=PythonOperator(
+#                 task_id='deletingRecords'
+#                 ,python_callable=deleteRecords
+#                 ,dag=franchise_sale_merging
+#                 )
+# taskInsertingRecords=PythonOperator(
+#                 task_id='insertingRecords'
+#                 ,python_callable=getFranchiseDataDfSql
+#                 ,dag=franchise_sale_merging
+#                 )
 
-taskDeleteRecrods>>taskInsertingRecords
+# taskDeleteRecrods>>taskInsertingRecords
 
 # deleteTempDataFile>> deleteBQRecordsTask >> franchiseSaleDataGenerationTask >> [franchiseSale_to_BQ]
 

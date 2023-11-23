@@ -1,17 +1,15 @@
+
 from datetime import date, datetime,timedelta
 from hmac import trans_36
 from pickle import NONE
 from airflow import DAG
 from airflow import models
-
-# import airflow.operators.dummy
-# from airflow.operators.dummy import DummyOperator
-
 from airflow.operators.python import PythonOperator
 import time
 from datetime import datetime
 from time import time, sleep
 from fileinput import filename
+
 # import imp
 import  pysftp
 from datetime import date
@@ -24,7 +22,6 @@ import math
 import os
 import shutil
 from numpy import source
-# from airflow.providers.postgres.operators.postgres import PostgresOperator
 import platform
 from hdbcli import dbapi
 import pandas as pd
@@ -53,10 +50,8 @@ from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryCreateEmptyDatasetOperator,
     BigQueryDeleteDatasetOperator,
 )
-#from airflow.contrib.sensors.file_sensor import FileSensor
 from airflow.providers.google.cloud.transfers.gcs_to_bigquery import GCSToBigQueryOperator
 from google.cloud.exceptions import NotFound
-# from sqlalchemy import create_engine
 import pandas_gbq
 import pysftp
 import csv
@@ -68,7 +63,6 @@ from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryDeleteDatasetOperator,
 )
 from airflow.providers.google.cloud.transfers.gcs_to_bigquery import GCSToBigQueryOperator
-# from airflow.contrib.operators.bigquery_operator import BigQueryOperator
 from io import StringIO
 import sqlalchemy
 import cx_Oracle as xo
@@ -94,7 +88,8 @@ from sqlalchemy.dialects.oracle import (
 )
 import connectionClass
 from suhailLib import returnDataDate
-from google.auth._service_account_info import()
+# from google.auth._service_account_info import()
+from google.oauth2.service_account import Credentials
 connection=connectionClass
 sapConnection=connection.sapConn()
 conn=sapConnection
@@ -103,7 +98,7 @@ oracleConnectionDB=connection.oracleIlgrpHcm()
 oracleAlchemy=connection.oracleIblGrpHcmAlchmy()
 oracleCursor=oracleConnectionDB.cursor()
 
-oracleTable='EBS_INVOICE_DATA_TBL'
+
 vPath = '/var/sftp/searle/'
 conString = '$SPL$'
 
@@ -111,7 +106,7 @@ storage.blob._DEFAULT_CHUNKSIZE = 5 * 1024* 1024  # 5 MB
 storage.blob._MAX_MULTIPART_SIZE = 5 * 1024* 1024  # 5 MB
 
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"]="/home/airflow/airflow/data-light-house-prod.json"
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"]="/home/airflow/airflow/data-light-house-prod.json"
+
 credential_file="/home/airflow/airflow/data-light-house-prod.json"
 credentials=Credentials.from_service_account_file(credential_file)
 
@@ -126,6 +121,12 @@ df1=pd.DataFrame()
 vStartDate,vEndDate=returnDataDate()
 vStartOracleDate=vStartDate.strftime("%d-%b-%Y")
 vEndOracleDate=vEndDate.strftime("%d-%b-%Y")
+
+# vStartDate='2023-10-01'
+# vEndDate='2023-10-31'
+# vStartOracleDate='01-Oct-23'
+# vEndOracleDate='31-Oct-23'
+
 
 vStartDate="'"+str(vStartDate)+"'"
 vEndDate="'"+str(vEndDate)+"'"
@@ -171,14 +172,15 @@ searle_merging = DAG(
     dagrun_timeout=timedelta(minutes=120)
 )  
 
-def deleteRecords():        
-    vStartDate1 = "'"+str(vStartDate.strftime("%Y-%m-%d"))+"'"
-    vEndDate1 = "'"+str(vEndDate.strftime("%Y-%m-%d"))+"'"
-
+def deleteRecords(): 
+    oracleTable='EBS_INVOICE_DATA_TBL'       
+    print('del reco')
+    print(vStartDate, ' ', vEndDate)
     try:
         QdelRecords = f'''DELETE FROM {oracleTable}
-                        where 1=1 and to_char(BILL_dt,'yyyy-mm-dd') between {vStartDate1} and {vEndDate1}
+                        where 1=1 and to_char(BILL_dt,'yyyy-mm-dd') between {vStartDate} and {vEndDate}                        
         '''
+        
         oracleCursor.execute(QdelRecords)
         oracleConnectionDB.commit()
 
@@ -190,15 +192,13 @@ deleteInvoiceData=PythonOperator(
                 python_callable=deleteRecords,
                 dag=searle_merging)
 
+
 def insertIblgrpHcmData():   
-    vStartDate1 = "'"+str(vStartDate.strftime("%Y-%m-%d"))+"'"
-    vEndDate1 = "'"+str(vEndDate.strftime("%Y-%m-%d"))+"'"
+    oracleTable='EBS_INVOICE_DATA_TBL'
+    print('insertIblgrpHcmData')
+    print(vStartDate, ' ', vEndDate)
 
     global dataFrame1
-    credentials = service_account.Credentials.from_service_account_file(
-        '/home/airflow/airflow/data-light-house-prod.json'
-        )
-
     project_id = 'data-light-house-prod'
     table_id = 'data-light-house-prod.EDW.IBL_SALES_DATA_BAKUP'
     pandas_gbq.context.credentials = credentials
@@ -212,7 +212,7 @@ def insertIblgrpHcmData():
                 sum(QUANTITY) SOLD_QTY
                 ,sum(AMOUNT) GROSS,round(IFNULL(unit_selling_price,0))  unit_selling_price
                 FROM `data-light-house-prod.EDW.VW_SEARLE_SALES`
-                WHERE 1=1 and BILLING_DATE  between {vStartDate1} and {vEndDate1}
+                WHERE 1=1 and BILLING_DATE  between {vStartDate} and {vEndDate}
                 GROUP BY
                 FORMAT_DATE('%d-%b-%y',BILLING_DATE) ,        item_code ,item_desc ,
                 ORG_ID ,    ORG_DESC ,  CHANNEL_DESC,DATA_FLAG,unit_selling_price
@@ -236,8 +236,9 @@ insertInvoiceData=PythonOperator(
                 dag=searle_merging)
 
 def QueryBigQuerySalesData():
-    vStartDate1 = "'"+str(vStartDate.strftime("%Y-%m-%d"))+"'"
-    vEndDate1 = "'"+str(vEndDate.strftime("%Y-%m-%d"))+"'"
+
+    print('QueryBigQuerySalesData')
+    print(vStartDate, ' ', vEndDate)
 
     credentials = service_account.Credentials.from_service_account_file(
         '/home/airflow/airflow/data-light-house-prod.json'
@@ -281,7 +282,7 @@ def QueryBigQuerySalesData():
         when upper(esa.SALES_ORDER_TYPE) NOT like '%RET%'  then 'Sale'
         end,' ') as reason   ,data_flag
         from `data-light-house-prod.EDW.VW_EBS_SAS_HC_ALL_LOC_DATA_NEW` ESA
-        where 1 = 1 AND billing_date between {vStartDate1} and {vEndDate1}
+        where 1 = 1 AND billing_date between {vStartDate} and {vEndDate}
         GROUP BY BR_CD,
         document_no,
         TRX_DATE1      ,
@@ -315,13 +316,9 @@ def QueryBigQuerySalesData():
                     index=False, header=True
                     )
     
-def QueryBigQueryCustomerData():    
-    vStartDate1 = "'"+str(vStartDate.strftime("%Y-%m-%d"))+"'"
-    vEndDate1 = "'"+str(vEndDate.strftime("%Y-%m-%d"))+"'"   
-
-    credentials = service_account.Credentials.from_service_account_file(
-        '/home/airflow/airflow/data-light-house-prod.json'
-    )
+def QueryBigQueryCustomerData(): 
+    print('QueryBigQueryCustomerData')
+    print(vStartDate, ' ', vEndDate)
 
     project_id = 'data-light-house-prod'
     pandas_gbq.context.credentials = credentials
@@ -333,7 +330,7 @@ def QueryBigQueryCustomerData():
                 ,ifnull(address_1,'') ADD1
                 ,concat(ifnull(address_2,''),ifnull(address_3,'')) ADD2, data_flag
                 from `data-light-house-prod.EDW.VW_EBS_SAS_HC_ALL_LOC_DATA_NEW`
-                where billing_date  between {vStartDate1} and {vEndDate1} and branch_id is not null
+                where billing_date  between {vStartDate} and {vEndDate} and branch_id is not null
         '''
 
     dataFrame1 = client.query(sql).to_dataframe()
@@ -369,7 +366,10 @@ generateCustomerFileData=PythonOperator(
                     ,dag=searle_merging
                 )
 
-def delRecords(): 
+def delEbsRecords(): 
+    print('delEbsRecords')
+    print(vStartOracleDate, ' ', vEndOracleDate)
+    
     oracleTable='ebs_invoice_order' 
     delQuery=f''' 
                 delete from {oracleTable} 
@@ -380,6 +380,10 @@ def delRecords():
     print('done.....................')
 
 def getEbsInvoiceOrderDataDfSql():    
+    print('getEbsInvoiceOrderDataDfSql')
+    print(vStartOracleDate, ' ', vEndOracleDate)
+    oracleTable='ebs_invoice_order'
+
     sqlData=f'''SELECT
                 institution,
                 branch_id,
@@ -442,13 +446,29 @@ def getEbsInvoiceOrderDataDfSql():
     print('done.....................')
 
 
+delEbsOrder=PythonOperator(
+    task_id='Deleting_Ebs_Order'
+    ,python_callable=delEbsRecords
+    ,dag=searle_merging
+)
+
+genEbsRecords=PythonOperator(
+    task_id='Inserting_Ebs_Orders'
+    ,python_callable=getEbsInvoiceOrderDataDfSql
+    ,dag=searle_merging
+)
+
+
 # deleteRecords()
 # insertIblgrpHcmData()
 # QueryBigQuerySalesData()
 # QueryBigQueryCustomerData()
+# delEbsRecords()
+# getEbsInvoiceOrderDataDfSql()
 
 [
     deleteInvoiceData>>insertInvoiceData
     ,generateSalesFileData,generateCustomerFileData
+    ,delEbsOrder>>genEbsRecords
 ]
 
