@@ -122,10 +122,10 @@ vStartDate,vEndDate=returnDataDate()
 vStartOracleDate=vStartDate.strftime("%d-%b-%Y")
 vEndOracleDate=vEndDate.strftime("%d-%b-%Y")
 
-# vStartDate='2023-10-01'
-# vEndDate='2023-10-31'
-# vStartOracleDate='01-Oct-23'
-# vEndOracleDate='31-Oct-23'
+vStartDate='2023-10-01'
+vEndDate='2023-10-31'
+vStartOracleDate='01-Oct-23'
+vEndOracleDate='31-Oct-23' 
 
 
 vStartDate="'"+str(vStartDate)+"'"
@@ -459,16 +459,16 @@ genEbsRecords=PythonOperator(
 )
 
 
-# deleteRecords()
-# insertIblgrpHcmData()
-# QueryBigQuerySalesData()
-# QueryBigQueryCustomerData()
-# delEbsRecords()
-# getEbsInvoiceOrderDataDfSql()
+deleteRecords()
+insertIblgrpHcmData()
+QueryBigQuerySalesData()
+QueryBigQueryCustomerData()
+delEbsRecords()
+getEbsInvoiceOrderDataDfSql()
 
-[
-    deleteInvoiceData>>insertInvoiceData
-    ,generateSalesFileData,generateCustomerFileData
-    ,delEbsOrder>>genEbsRecords
-]
+# [
+#     deleteInvoiceData>>insertInvoiceData
+#     ,generateSalesFileData,generateCustomerFileData
+#     ,delEbsOrder>>genEbsRecords
+# ]
 
