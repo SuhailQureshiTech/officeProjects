@@ -110,26 +110,6 @@ creationDate = datetime.today()
 now = datetime.now()
 current_time = now.time()
 
-# def getDate():
-#     global vStartDate, vEndDate
-#     if vTodayDate <= 5:
-#         from dateutil.relativedelta import relativedelta
-#         print('if block')
-#         from dateutil.relativedelta import relativedelta
-#         d = today - relativedelta(months=2)
-#         vStartDate = date(d.year, d.month, 1)
-#         # vStartDate = "'"+str(vStartDate.strftime("%d-%b-%Y"))+"'"
-#         vStartDate = vStartDate
-#         vEndDate = date(today.year, today.month, 1) - relativedelta(days=1)
-
-#     else:
-
-#         vStartDate = datetime.date(datetime.today().replace(day=1))
-#         vEndDate = datetime.date(datetime.today()-timedelta(days=0))
-
-#         # print('else : from date :', str(vStartDate.strftime('%Y%m%d')))
-#         # print('else : enmd date :', str(vEndDate.strftime('%Y%m%d')))
-# getDate()
 
 vStartDate="'"+str(vStartDate)+"'"
 vEndDate="'"+str(vEndDate)+"'"
@@ -212,7 +192,7 @@ def getFranchiseDataParqeet():
                 cast(to_char(record_date,'yyyymmdd')  as numeric) as record_date,
                 brick_code,brick_name
             from franchise.franchise_data fd     
-            where 1=1 and invoice_date between  '2023-10-01' and '2023-10-31' 
+            where 1=1 and invoice_date between {vStartDate} and {vEndDate}
             '''
 
     # dataFile=f'''{filePath}franchiseData.parquet'''
