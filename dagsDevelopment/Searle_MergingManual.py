@@ -458,102 +458,17 @@ genEbsRecords=PythonOperator(
     ,dag=searle_merging
 )
 
-# Franchise Stock
 
-def insertFranchisStockData():   
-    oracleTable='FRANCHISE_STOCK'
-    print('FRANCHISE STOCK')
-    print(vStartDate, ' ', vEndDate)
+deleteRecords()
+insertIblgrpHcmData()
+QueryBigQuerySalesData()
+QueryBigQueryCustomerData()
+delEbsRecords()
+getEbsInvoiceOrderDataDfSql()
 
-    global dataFrame1
-    project_id = 'data-light-house-prod'
-    # table_id = 'data-light-house-prod.EDW.IBL_SALES_DATA_BAKUP'
-    pandas_gbq.context.credentials = credentials
-
-    client = bigquery.Client(credentials=credentials, project=project_id)
-    sqlQuery = f'''
-            SELECT
-            company_code,
-            ibl_distributor_code,
-            dated,
-            distributor_item_code,
-            ibl_item_code,
-            distributor_item_description,
-            lot_number,
-            expiry_date,
-            stock_qty,
-            stock_value,
-            ibl_branch_code,
-            price,
-            in_transit_stock,
-            purchase_unit,
-            created_date            
-            from `EDW.franchise_stock`
-            where 1=1 and cast(dated as date)={vEndDate}       
-             '''
-
-    dataFrame1 = client.query(sqlQuery).to_dataframe()
-    dataFrame1['transfer_date'] =datetime.now()
-    print (dataFrame1.info())
-    oracle_dtypes = {
-        'company_code'                     :VARCHAR2(50),
-        'ibl_distributor_code'             :VARCHAR2(50),
-        'dated'                            :DATE,
-        'distributor_item_code'            :VARCHAR2(100),
-        'ibl_item_code'                    :VARCHAR2(100),
-        'distributor_item_description'     :VARCHAR2(250),
-        'lot_number'                       :VARCHAR2(100),
-        'expiry_date'                      :DATE,
-        'stock_qty'                        :FLOAT,
-        'stock_value'                      :FLOAT,
-        'ibl_branch_code'                  :VARCHAR2(15),
-        'price'                            :FLOAT,
-        'in_transit_stock'                 :FLOAT,
-        'purchase_unit'                    :FLOAT,
-        'created_date'                     :DATE,
-        'transfer_date'                    :DATE
-             }
-
-    distCodeList=[]
-    for x in dataFrame1['ibl_distributor_code'].unique():
-       dateFound=str(x)
-    #    [0:10]
-       distCodeList.append(dateFound)
-    
-    # print(distCodeList)
-    d_list_string ="'"+"','".join(distCodeList)+"'"
-    delete_query = f'''
-                    delete from franchise_stock
-                      where ibl_distributor_code in ({d_list_string})
-                    '''
-    # print(d_list_string)
-    # print(delete_query)
-
-    result =oracleAlchemy.execute(delete_query)
-    rowCounts=result.rowcount
-    print(f''' delte row count {rowCounts}   ''')
-
-    dataFrame1.to_sql(oracleTable,schema='IBLGRPHCM',if_exists='append',con=oracleAlchemy,index=False,dtype=oracle_dtypes)
-    print('done.....................')
-
-# taskFranchiseStock=PythonOperator(
-#     task_id='insertFranchiseStock'
-#     ,python_callable=insertFranchisStockData
-#     ,dag=searle_merging
-# )
-
-# deleteRecords()
-# insertIblgrpHcmData()
-# QueryBigQuerySalesData()
-# QueryBigQueryCustomerData()
-# delEbsRecords()
-# getEbsInvoiceOrderDataDfSql()
-# insertFranchisStockData()
-
-[
-    deleteInvoiceData>>insertInvoiceData
-    ,generateSalesFileData,generateCustomerFileData
-    ,delEbsOrder>>genEbsRecords
-    # ,taskFranchiseStock
-]
+# [
+#     deleteInvoiceData>>insertInvoiceData
+#     ,generateSalesFileData,generateCustomerFileData
+#     ,delEbsOrder>>genEbsRecords
+# ]
 

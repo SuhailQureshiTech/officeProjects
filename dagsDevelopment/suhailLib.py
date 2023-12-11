@@ -115,7 +115,7 @@ def returnDataDate(pDay=1):
     vTodayDate = datetime.date(datetime.today())
     vTodayDate = int(vTodayDate.strftime("%d"))
 
-    if vTodayDate==1:   
+    if vTodayDate<=4:   
 
         # from Previous month to current...
         # print('vtoday :',vTodayDate)
@@ -126,7 +126,8 @@ def returnDataDate(pDay=1):
 
         import dateutil.relativedelta
         first = today.replace(day=1)
-        vEndDate = date(today.year, today.month, 1) - relativedelta(days=1)
+        # vEndDate = date(today.year, today.month, 1) - relativedelta(days=1)
+        vEndDate = datetime.date(datetime.today()-timedelta(days=1))
 
     else:
         if pDay==1:

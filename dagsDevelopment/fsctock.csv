@@ -1,0 +1,2 @@
+,company_code,ibl_branch_code,branch_desc,dated,ibl_distributor_code,distributor_desc,distributor_item_code,ibl_item_code,distributor_item_description,item_desc,lot_number,expiry_date,stock_qty,stock_value,in_transit_stock,purchase_unit,price,transfer_date,data_flag
+0,6300,8039,Khan Pur          ,2023-12-04 00:00:00+00:00,2000218476,Ahsan Traders,10257,1013000808,BUFEXO 40MG TAB 20`s (PAK)  20 S 	,BUFEXO 40MG TAB 20 s PAK,JKD004,2024-03-21 00:00:00+00:00,30.0,9690.0,0.0,0.0,323.0,2023-12-05 12:37:43.691408+00:00,SD
