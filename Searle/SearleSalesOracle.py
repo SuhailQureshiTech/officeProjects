@@ -83,8 +83,10 @@ def deleteRecords(ftransdate):
     # >={vStartDate}
     try:
         QdelRecords = f'''DELETE FROM EBS_INVOICE_DATA_TBL
-                        where 1=1 and to_char(BILL_dt,'yyyy-mm-dd') between {vStartDate} and {vEndDate}
+                        where 1=1 and to_char(BILL_dt,'yyyy-mm-dd') between '01-dec-23' and '09-dec-23'
         '''
+        # between {vStartDate} and {vEndDate}
+
         # print('deete qyery : ',QdelRecords)
         oracleCursor.execute(QdelRecords)
         oracleConnectionDB.commit()
@@ -115,7 +117,7 @@ def oraRec4():
         sum(QUANTITY) SOLD_QTY
         ,sum(AMOUNT) GROSS,round(IFNULL(unit_selling_price,0))  unit_selling_price
         FROM `data-light-house-prod.EDW.VW_SEARLE_SALES`
-        WHERE 1=1 and BILLING_DATE  between {vStartDate} and {vEndDate}
+        WHERE 1=1 and BILLING_DATE  between '2023-12-01' and '2023-12-09'
         GROUP BY
         FORMAT_DATE('%d-%b-%y',BILLING_DATE) ,        item_code ,item_desc ,
         ORG_ID ,    ORG_DESC ,  CHANNEL_DESC,DATA_FLAG,unit_selling_price

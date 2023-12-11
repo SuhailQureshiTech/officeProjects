@@ -65,7 +65,9 @@ sapConn=connection.sapConn()
 spec_chars=connectionClass.getSpecChars()
 
 storageClient = storage.Client.from_service_account_json(
-    r'/home/airflow/airflow/data-light-house-prod.json')
+    #r'/home/airflow/airflow/data-light-house-prod.json'
+    r'd://data-light-house-prod-0baa98f57152 (1).json'
+    )
 
 storage.blob._DEFAULT_CHUNKSIZE = 5 * 1024* 1024  # 5 MB
 storage.blob._MAX_MULTIPART_SIZE = 5 * 1024* 1024  # 5 MB
@@ -103,7 +105,7 @@ vEndDate = "'"+str(vEndDate)+"'"
 print('else : from date :', vStartDate)
 print('else : enmd date :', vEndDate)
 
-filePath = f'''/home/admin2/airflow/franchise/'''
+#filePath = f'''/home/admin2/airflow/franchise/'''
 global fileName
 fileName = 'FranchiseSales.csv'
 # gcsFileName = 'FranchiseSaleData.csv'
@@ -150,7 +152,8 @@ franchise_sale_merging = DAG(
     description='franchise_sale'
 )
 
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"]="/home/airflow/airflow/data-light-house-prod.json"
+os.environ[
+    "GOOGLE_APPLICATION_CREDENTIALS"] = "d://data-light-house-prod-0baa98f57152 (1).json"
 
 today = date.today()
 curr_date = today.strftime("%d-%b-%Y")
