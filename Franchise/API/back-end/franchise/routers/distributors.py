@@ -179,7 +179,11 @@ async def upload_sales_file(company_code, user_id, request: Request, files: Uplo
 
         if df['Franchise Code'].apply(lambda x: len(str(x))>10 or len(str(x))<10).any():
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Franchise Code data length must not greater or less than 10 character")
+                    detail="Franchise Code data length must not greater than 10 character")
+
+        if df['Franchise Code'].apply(lambda x: len(str(x))<10 or len(str(x))<10).any():
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Franchise Code data length must not less than 10 character")
 
         if df['Franchise Code'].dtypes == object:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
@@ -457,6 +461,13 @@ async def upload_stock_file(company_code, user_id, stockFiles: UploadFile = File
 
     def validateData():
     #   start
+        date1=str(date.today())
+        chkPd=pd.DataFrame()
+        chkPd=df[df['Dated']!=today] 
+        if len(chkPd)>=1:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="stock date must be current date")
+
         if df['RD Code'].isnull().values.any():
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                     detail="RD Code cannot be null")
