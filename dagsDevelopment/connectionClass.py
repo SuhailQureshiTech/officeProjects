@@ -50,12 +50,12 @@ def s4HanaConnection():
 def sapConnAlchemy():
     hdb_user = 'ETL'
     hdb_password = 'EtlIbl12345'
-    hdb_host = '10.210.134.204'
+    hdb_host = '10.210.134.43'
     hdb_port = '33015'
     connection_string ='hana://%s:%s@%s:%s/?encrypt=true&sslvalidatecertificate=false' % (
         hdb_user, hdb_password, hdb_host, hdb_port)
-    return connection_string
-
+    engine=sqlalchemy.create_engine(connection_string)
+    return engine
 # 
 def sapSandBox2ConnAlchemy():
     hdb_user = 'ETL'
@@ -118,12 +118,12 @@ def FranchiseAlchmy():
     engine = sqlalchemy.create_engine(connect_string)
     return engine
 
-def pioneerSqlAlchmy():
+def attendanceSqlAlchmy():
     host = '35.216.155.219'
-    db = 'poineer_db'
-    user = 'pioneer'
-    password = 'poineer_synch!123!456'
-    schema = 'poineer_schema'
+    db = 'pioneerDB'
+    user = 'attendanceUser'
+    password = 'attendance!123!456'
+    schema = 'attendance'
     connect_string =f"postgresql+psycopg2://{user}:{password}@{host}:5432/{db}"
     engine = sqlalchemy.create_engine(connect_string)
     return engine
@@ -148,6 +148,8 @@ def attendanceMachine66():
     user = 'sa'
     password =urllib.parse.quote_plus ('abc@123')
     schema = 'dbo'
-    connect_string = f'''mssql+psycopg2://{user}:{password}@{server}:1433/{db}'''
-    engine = sqlalchemy.create_engine(connect_string)
-    return engine
+    driver='ODBC Driver 18 for SQL Server'
+    constring = f"mssql+pyodbc://{user}:{password}@{server}/{db}?driver={driver}"
+    dbEngine = sqlalchemy.create_engine(constring, fast_executemany=True, connect_args={'connect_timeout': 10, 'TrustServerCertificate': 'yes'}, echo=False) 
+    # engine=dbEngine.connect()
+    return dbEngine
