@@ -153,7 +153,6 @@ sap_sale_merging = DAG(
 )
 
 
-
 def deleteData():
     cursor.execute(del_command)
     cursor.execute(del_command1)
@@ -371,15 +370,11 @@ def insertSapSales():
     cursor.execute(update_statement)
     cursor.execute(insert_command3)
 
-
-
 insertSapSalesTask = PythonOperator(
     task_id='INSERT_SAP_SALES',
     python_callable=insertSapSales,
     dag=sap_sale_merging
 )
-
-
 
 def loadDataGcs():
     sql_command = f'''SELECT
