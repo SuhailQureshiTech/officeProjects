@@ -1,6 +1,7 @@
 
 # import 
     # Google
+import requests as req
 from google.cloud import storage
 from google.cloud import bigquery
 from google.oauth2 import service_account
@@ -45,17 +46,7 @@ import io
 import numpy as np
 import os
 import sqlalchemy
-
-# from sqlalchemy.dialects.postgresql import(
-#     VARCHAR,INT4RANGE,DATE
-# )
-
-# from sqlalchemy import create_engine
-# import pandas_gbq
-
-# from pymysql import Date
-# from pymysql import Date
-# from pydantic import FilePath
+from sqlalchemy.types import VARCHAR, INTEGER, FLOAT,Date
 
 import pysftp
 import csv
@@ -65,8 +56,6 @@ from hdbcli import dbapi
 import pandas as pd
 import pandas_gbq
 from datetime import date, datetime, timedelta
-
-# from airflow.contrib.operators import gcs_to_bq
 
 import numpy as np
 from regex import F
@@ -124,9 +113,14 @@ creationDate = datetime.today()
 now = datetime.now()
 current_time = now.time()
 
+vStartSapDate=vStartDate.strftime('%Y%m%d')
+vEndSapDate=date.today().strftime('%Y%m%d')
 
 vStartDate="'"+str(vStartDate)+"'"
-vEndDate="'"+str(vEndDate)+"'"
+vEndDate="'"+str(date.today())+"'"
+
+print('start sap date : ',vStartSapDate)
+print('End sap date : ',vEndSapDate)
 
 print('else : from date :', vStartDate)
 print('else : enmd date :', vEndDate)
@@ -178,31 +172,16 @@ def getAttendance():
     sqlGetRec=f'''
             SELECT 
                 300 mandt,Tran_MachineRawPunchId transaction_id,CardNo employee_id
-                ,Dateime1  punch_datetime,machineno device_no,'01' status
-                ,P_Day,ISManual            
+                ,PunchDatetime  punch_datetime,machineno device_no,'01' status
+                ,P_Day,ISManual,'DB-RECORDS' data_flag            
             from Tran_MachineRawPunch trn
-            where 1=1 and cast(PunchDatetime as date)<='2023-12-13'   
-            
-            '''
+            where 1=1 and cast(PunchDatetime as date) between {vStartDate} and {vEndDate}                            
+        '''            
+
     franchiseDf=pd.read_sql(sqlGetRec,con=attendance66)
     franchiseDf['punch_datetime']=pd.to_datetime(franchiseDf['punch_datetime']) 
     franchiseDf['record_datetime']=datetime.now()
 
-    # dataframe type conversion
-    # convert_dict = {
-    #                 'transaction_id':'string'
-    #                 ,'employee_id': 'string'
-    #                 ,'device_no': 'string'
-    #                 ,'status': 'string'
-    #                 ,'P_Day':'string'
-    #                 ,'ISManual': 'string'
-    #             }
-    # franchiseDf=franchiseDf.astype(convert_dict)
-
-
-    # VARCHAR,INT4RANGE,DATE
-
-    from sqlalchemy.types import VARCHAR, INTEGER, FLOAT,Date
     postgressql_dtypes={
         'mandt'                 :   INTEGER
         ,'transaction_id'       :   VARCHAR
@@ -211,9 +190,19 @@ def getAttendance():
         ,'status'               :   VARCHAR
         ,'P_Day'                :   VARCHAR
         ,'ISManual'             :   VARCHAR 
+        ,'data_flag'            :   VARCHAR
     }
 
-    print(franchiseDf.info())
+    # print(franchiseDf.info())
+
+    sqlDelRec=f'''
+            delete from attendance.pioneer_attendance pa 
+            where 1=1 and cast(pa.punch_datetime as date) between {vStartDate} and {vEndDate}
+                and data_flag='DB-RECORDS'
+    '''
+
+    result=poineerSqlAlchemy.execute(sqlDelRec)
+    print('total number of delete rows ',result.rowcount)
 
     franchiseDf.to_sql(
          'pioneer_attendance'   
@@ -225,19 +214,25 @@ def getAttendance():
     )
 
 def delteSapAttendanceRecords():    
-    delQuery='truncate table sapabap1.ztmpor'
-    sapAlchemy.execute(delQuery)
+    delQuery=f'''
+            delete FROM SAPABAP1.ztmpor
+            WHERE 1=1 AND cast(DATE1 AS number) BETWEEN  {vStartSapDate} and {vEndSapDate}
+            '''
+    result=sapAlchemy.execute(delQuery)
+    print('total number of rows deleted from sap ',result.rowcount)
 
 def insertAttendanceIntoSap():
     sqlGetRec=f'''
-       select 300 mandt,tmid,cardno ,date1,p_day,ismanual,time,inout1,flag
+       select 300 mandt,tmid,cardno ,date1,p_day,ismanual,machine,time,inout1,flag
          from attendance.vw_attendance_inout_rec  
-    '''
+    where 1=1 and date1 between {vStartSapDate} and {vEndSapDate} 
+        and flag='A'    
+    '''    
 
     dfRec=pd.read_sql(sqlGetRec,con=poineerSqlAlchemy) 
-
-    print(dfRec.info())
-    print(dfRec)
+    print('Total number of rows inserted in SAP ',len(dfRec))
+    # print(dfRec.info())
+    # print(dfRec)
 
     dfRec.to_sql('ztmpor'
                  ,schema='SAPABAP1'
@@ -246,11 +241,75 @@ def insertAttendanceIntoSap():
                  ,if_exists='append'                 
                  )
 
+def getApiRecords():
+    vStartDate1= vStartDate.replace("'",'')
+    vEndDate1=vEndDate.replace("'",'')
 
 
+    api_url =f'''
+                http://pioneerattendance.com:94/api/EmployeeData/DateRange/{vStartDate1}/{vEndDate1}
+                '''
+    
+    print('api url : ',api_url)
+    # response = req.get(url=api_url
+    #                    )
+    # r = response.json()
+    # df = pd.DataFrame.from_dict(r)
+    # df['mandt']='300'
+    # df['P_Day']='N'
+    # df['ISManual']='N'
+    # df['data_flag']='API'
+    # df['record_datetime'] = creationDate
+
+    # df = df.rename(
+    #     columns={'No': 'transaction_id', 'Employee ID': 'employee_id', 'PunchDatetime': 'punch_datetime'
+    #              ,'Device No': 'device_no', 'Status': 'status'
+    #              }
+    #             )
+
+    # print(df)
+    # print(df.info())
+
+    # sqlDelRec=f'''
+    #         delete from attendance.pioneer_attendance pa 
+    #         where 1=1 and cast(pa.punch_datetime as date) between {vStartDate} and {vEndDate}
+    #             and data_flag='API'
+    # '''
+
+    # result=poineerSqlAlchemy.execute(sqlDelRec)
+    # print('total number of delete rows api ',result.rowcount)
+
+    # df.to_sql(
+    #      'pioneer_attendance'   
+    #     ,schema='attendance'
+    #     ,con=poineerSqlAlchemy
+    #     ,index=False
+    #     ,if_exists='append'
+    #     # ,dtype=postgressql_dtypes
+    # )
+
+
+ 
+
+    # os.chdir('d:\\Google Drive - Office\\PythonLab\\PoineerAttendance\\')
+
+    # print('working dir ',os.getcwd())
+    # df.to_csv('bulkRecordsAPI.csv',index=False)
+
+    # df.to_sql('attendance_records',
+    #           schema='pioneer_schema',
+    #           con=attendance66,
+    #           index=False,
+    #           if_exists='append'
+    #           )
+
+ 
+
+# # Attendance data synch block
 # getAttendance()
 # delteSapAttendanceRecords()
-insertAttendanceIntoSap()
+# insertAttendanceIntoSap()
+getApiRecords()
 
 # def deleteRecords():
 
