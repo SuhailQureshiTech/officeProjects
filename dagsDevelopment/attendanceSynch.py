@@ -1,6 +1,7 @@
 
 # import 
     # Google
+from airflow.operators.dummy import DummyOperator
 import requests as req
 from google.cloud import storage
 from google.cloud import bigquery
@@ -135,7 +136,7 @@ print('else : enmd date :', vEndDate)
 
 
 default_args = {
-    'owner': 'SuhailQureshi',
+    'owner': 'admin',
     #'start_date': datetime(2023, 2, 14),
     # 'end_date': datetime(),
     # 'email_on_failure': True,
@@ -151,18 +152,30 @@ default_args = {
     'gcp_conn_id': 'google_cloud_default'
 }
 
-franchise_sale_merging = DAG(
+attendanceSynchDag = DAG(
     dag_id='attendanceSynch',
     default_args=default_args,
     catchup=False,
     start_date=datetime(2023, 11, 20),
-    schedule_interval='00 04 * * *',
-    # schedule_interval=None,
+    # schedule_interval='00 04 * * *',
+    schedule_interval=None,
     # on_success_callback=success_function,
     # email_on_failure=failure_email_function,
     dagrun_timeout=timedelta(minutes=120),
     description='Attendance Synchronization'
 )
+
+def delAttendanceRec():
+    print('vstart date ',vStartDate)
+    print('vEnd Date ', vEndDate)
+
+    sqlDelRec=f'''
+            delete from attendance.pioneer_attendance pa 
+            where 1=1 and cast(pa.punch_datetime as date) between {vStartDate} and {vEndDate}
+    '''
+
+    result=poineerSqlAlchemy.execute(sqlDelRec)
+    print('total number of delete rows ',result.rowcount)
 
 def getAttendance():
 
@@ -175,9 +188,9 @@ def getAttendance():
                 ,PunchDatetime  punch_datetime,machineno device_no,'01' status
                 ,P_Day,ISManual,'DB-RECORDS' data_flag            
             from Tran_MachineRawPunch trn
-            where 1=1 and cast(PunchDatetime as date) between {vStartDate} and {vEndDate}                            
+            where 1=1 and cast(PunchDatetime as date) between {vStartDate} and {vEndDate} and temp<>'API'                           
         '''            
-
+    
     franchiseDf=pd.read_sql(sqlGetRec,con=attendance66)
     franchiseDf['punch_datetime']=pd.to_datetime(franchiseDf['punch_datetime']) 
     franchiseDf['record_datetime']=datetime.now()
@@ -193,17 +206,6 @@ def getAttendance():
         ,'data_flag'            :   VARCHAR
     }
 
-    # print(franchiseDf.info())
-
-    sqlDelRec=f'''
-            delete from attendance.pioneer_attendance pa 
-            where 1=1 and cast(pa.punch_datetime as date) between {vStartDate} and {vEndDate}
-                and data_flag='DB-RECORDS'
-    '''
-
-    result=poineerSqlAlchemy.execute(sqlDelRec)
-    print('total number of delete rows ',result.rowcount)
-
     franchiseDf.to_sql(
          'pioneer_attendance'   
         ,schema='attendance'
@@ -213,6 +215,48 @@ def getAttendance():
         ,dtype=postgressql_dtypes
     )
 
+    
+def getApiRecords():
+    vStartDate1= vStartDate.replace("'",'')
+    vEndDate1=vEndDate.replace("'",'')
+
+    api_url =f'''http://pioneerattendance.com:94/api/EmployeeData/DateRange/{vStartDate1}/{vEndDate1}'''
+    
+    print('api url : ',api_url)
+    response = req.get(url=api_url
+                       )
+    r = response.json()
+    df = pd.DataFrame.from_dict(r)
+    df['mandt']='300'
+    df['P_Day']='N'
+    df['ISManual']='N'
+    df['data_flag']='API'
+    df['record_datetime'] = creationDate
+    df['No']='999'+df['No'].astype(str)    
+
+    df = df.rename(
+        columns={'No': 'transaction_id', 'Employee ID': 'employee_id', 'PunchDatetime': 'punch_datetime'
+                 ,'Device No': 'device_no', 'Status': 'status'
+                 }
+                )
+
+
+    print(df)
+    print(df.info())
+
+    # os.chdir('d:\\Google Drive - Office\\PythonLab\\PoineerAttendance\\')
+    # print('working dir ',os.getcwd())
+    # df.to_csv('bulkRecordsAPI.csv',index=False)
+
+    df.to_sql(
+         'pioneer_attendance'   
+        ,schema='attendance'
+        ,con=poineerSqlAlchemy
+        ,index=False
+        ,if_exists='append'
+        )     
+    print('total number of record from API inserted  : ',len(df))
+
 def delteSapAttendanceRecords():    
     delQuery=f'''
             delete FROM SAPABAP1.ztmpor
@@ -221,18 +265,45 @@ def delteSapAttendanceRecords():
     result=sapAlchemy.execute(delQuery)
     print('total number of rows deleted from sap ',result.rowcount)
 
-def insertAttendanceIntoSap():
+def insertAttendanceIntoSap():    
+    # sqlGetRec=f'''
+    #    select 300 mandt,tmid,cardno ,date1,p_day,ismanual,machine,time,inout1,flag
+    #      from attendance.vw_attendance_inout_rec  
+    #      where 1=1 and date1 between {vStartSapDate} and {vEndSapDate}     
+    # '''    
+
     sqlGetRec=f'''
-       select 300 mandt,tmid,cardno ,date1,p_day,ismanual,machine,time,inout1,flag
-         from attendance.vw_attendance_inout_rec  
-    where 1=1 and date1 between {vStartSapDate} and {vEndSapDate} 
-        and flag='A'    
+        select 300 mandt
+                ,min(tmid)tmid,cardno ,date1,p_day,ismanual
+                ,0  machine
+                ,MIN(time )time
+                ,'In' inout1
+                ,flag
+        from attendance.vw_attendance_inout_rec  
+        where 1=1         
+            and date1 between {vStartSapDate} and {vEndSapDate}     
+            group by cardno ,date1,p_day,ismanual,flag
+    union all         
+        select 300 mandt
+            ,max(tmid)tmid,cardno ,date1,p_day,ismanual
+            ,0 machine
+            ,max(time )time
+            ,'Out' inout1
+            ,flag
+        from attendance.vw_attendance_inout_rec  
+        where 1=1
+            and date1 between  {vStartSapDate} and {vEndSapDate}     
+            and concat(tmid,cardno,date1,p_day,ismanual,time,flag)  not in (  select concat(min(tmid),cardno ,date1,p_day,ismanual,MIN(time ),flag)
+            from attendance.vw_attendance_inout_rec  
+            where 1=1     group by cardno ,date1,p_day,ismanual,flag)
+        group by cardno ,date1,p_day,ismanual,flag
     '''    
+
 
     dfRec=pd.read_sql(sqlGetRec,con=poineerSqlAlchemy) 
     print('Total number of rows inserted in SAP ',len(dfRec))
     # print(dfRec.info())
-    # print(dfRec)
+    print(dfRec)
 
     dfRec.to_sql('ztmpor'
                  ,schema='SAPABAP1'
@@ -241,462 +312,92 @@ def insertAttendanceIntoSap():
                  ,if_exists='append'                 
                  )
 
-def getApiRecords():
-    vStartDate1= vStartDate.replace("'",'')
-    vEndDate1=vEndDate.replace("'",'')
+def insertIntoAttendance66():
+
+        #    SELECT * from Tran_MachineRawPunch_tmp
+        #    WHERE 1=1
+        #     and concat(cardno,punchdatetime,machineno,p_day,ismanual,inout) not in ( SELECT concat(cardno,punchdatetime,machineno,p_day,ismanual,inout) 
+        #     from Tran_MachineRawPunch tmrp 
+        #   		where 1=1 and cast(PunchDatetime as date) BETWEEN '2023-12-01' and '2023-12-15' 
+        #   		 and temp='API'
+        #   		)         ;
+
+    sqlGetRecords=f''' 
+        select             
+            cardno CardNo
+            ,cast(concat(substring(cast(date1 as text),1,4),'-',substring(cast(date1 as text),5,2),'-',substring(cast(date1 as text),7,2),' ',substring(time,1,2),':'
+            ,substring(time,3,2),':',substring(time,5,2)
+            ) as timestamp) PunchDatetime 
+            ,machine  MachineNo,p_day  P_Day,ismanual  ISManual,inout1 inout
+            ,data_flag temp             
+        from attendance.vw_attendance_inout_rec a 
+        where 1=1 and date1 between {vStartSapDate} and {vEndSapDate} and data_flag ='API'                
+            '''
+
+    df=pd.read_sql(sqlGetRecords,con=poineerSqlAlchemy)
+    print(df)
+
+    sqlTruncateTable=f'''
+            TRUNCATE table Tran_MachineRawPunch_tmp
+    '''
+    attendance66.execute(sqlTruncateTable)
+
+    df.to_sql('Tran_MachineRawPunch_tmp'
+              ,schema='dbo'
+              ,con=attendance66
+              ,index=False
+              ,if_exists='replace'
+              )
+    print('total number of record inserted into 66 machine are  : ',len(df))
 
 
-    api_url =f'''
-                http://pioneerattendance.com:94/api/EmployeeData/DateRange/{vStartDate1}/{vEndDate1}
-                '''
-    
-    print('api url : ',api_url)
-    # response = req.get(url=api_url
-    #                    )
-    # r = response.json()
-    # df = pd.DataFrame.from_dict(r)
-    # df['mandt']='300'
-    # df['P_Day']='N'
-    # df['ISManual']='N'
-    # df['data_flag']='API'
-    # df['record_datetime'] = creationDate
-
-    # df = df.rename(
-    #     columns={'No': 'transaction_id', 'Employee ID': 'employee_id', 'PunchDatetime': 'punch_datetime'
-    #              ,'Device No': 'device_no', 'Status': 'status'
-    #              }
-    #             )
-
-    # print(df)
-    # print(df.info())
-
-    # sqlDelRec=f'''
-    #         delete from attendance.pioneer_attendance pa 
-    #         where 1=1 and cast(pa.punch_datetime as date) between {vStartDate} and {vEndDate}
-    #             and data_flag='API'
-    # '''
-
-    # result=poineerSqlAlchemy.execute(sqlDelRec)
-    # print('total number of delete rows api ',result.rowcount)
-
-    # df.to_sql(
-    #      'pioneer_attendance'   
-    #     ,schema='attendance'
-    #     ,con=poineerSqlAlchemy
-    #     ,index=False
-    #     ,if_exists='append'
-    #     # ,dtype=postgressql_dtypes
-    # )
-
-
- 
-
-    # os.chdir('d:\\Google Drive - Office\\PythonLab\\PoineerAttendance\\')
-
-    # print('working dir ',os.getcwd())
-    # df.to_csv('bulkRecordsAPI.csv',index=False)
-
-    # df.to_sql('attendance_records',
-    #           schema='pioneer_schema',
-    #           con=attendance66,
-    #           index=False,
-    #           if_exists='append'
-    #           )
-
- 
 
 # # Attendance data synch block
+# delAttendanceRec()
 # getAttendance()
+# getApiRecords()
 # delteSapAttendanceRecords()
 # insertAttendanceIntoSap()
-getApiRecords()
+insertIntoAttendance66()    
 
-# def deleteRecords():
 
-#     print('vstart date ',vStartDate)
-#     print('vEnd Date ', vEndDate)
+dummy_task = DummyOperator(
+    task_id='dummy_task', retries=3, dag=attendanceSynchDag)
 
-#     delQuery=f'''delete from data-light-house-prod.EDW.FRANCHISE_SALES_NEW
-#                     where invoice_date  between {vStartDate} and {vEndDate}
-#       '''
-#     job=bigQueryClient.query(delQuery)
-#     job.result()
+taskDelAttendanceRecords=PythonOperator(
+    task_id='deleteAttendanceRecords'
+    ,python_callable=delAttendanceRec
+    ,dag=attendanceSynchDag
+)
 
-# def getFranchiseDataParqeet():
-#     # global
-#     print('vstart date ',vStartDate)
-#     print('vEnd Date ', vEndDate)
-#     sqlData=f'''select
-#                 '6300' company_code,
-#                 ibl_distributor_code,
-#                 ibl_distributor_desc,
-#                 branch_code,
-#                 distributor_location_id,
-#                 distributor_location_desc,
-#                 order_no,
-#                 invoice_number,
-#                 invoice_date,
-#                 channel,
-#                 distributor_customer_code,
-#                 ibl_customer_code,
-#                 ibl_customer_name,
-#                 distributor_item_code,
-#                 ibl_item_code,
-#                 ibl_item_description,
-#                 sold_qty,
-#                 gross_amount,
-#                 bonus_qty,
-#                 discount,
-#                 reason,
-#                 address,
-#                 cast(to_char(record_date,'yyyymmdd')  as numeric) as record_date,
-#                 brick_code,brick_name
-#             from franchise.franchise_data fd     
-#             where 1=1 and invoice_date between {vStartDate} and {vEndDate}
-#             '''
+taskGetAttendanceRecords=PythonOperator(
+    task_id='getAttendanceRecords'
+    ,python_callable=getAttendance
+    ,dag=attendanceSynchDag
+)
 
-#     # dataFile=f'''{filePath}franchiseData.parquet'''
+taskApiAttendanceRecords=PythonOperator(
+    task_id='getApiAttendanceRecords'
+    ,python_callable=getApiRecords
+    ,dag=attendanceSynchDag
+)
 
-#     franchiseDf=pd.read_sql(sqlData,con=franchiseEngine)
-#     franchiseDf['invoice_date']=pd.to_datetime(franchiseDf['invoice_date']) 
-#     print(franchiseDf)
+taskDelSapRecords=PythonOperator(
+    task_id='delSapRecords'
+    ,python_callable=delteSapAttendanceRecords
+    ,dag=attendanceSynchDag
+)
 
-#     conn1=sapConn
-#     cus_df=pds.read_sql(f'''
-#                         SELECT distinct  KUNNR as "SAP_CUSTOMER_CODE"
-#                         ,ADRNR
-#                         ,A.STR_SUPPL1 add1,
-#                         A.STR_SUPPL2 add2,A.STR_SUPPL3 add3
-#                         FROM SAPABAP1.KNA1 AS B
-#                         LEFT OUTER JOIN SAPABAP1.ADRC AS A ON (A.CLIENT=B.MANDT AND A.ADDRNUMBER=B.ADRNR)
-#                         WHERE 1=1 AND MANDT=300
-#                         ''',conn1)
-
-#     branch_df=pds.read_sql(f'''
-#                         SELECT distinct  VKBUR "sap_branch_code",BEZEI "branch_desc"
-#                         FROM SAPABAP1.TVKBT BRANCH WHERE MANDT=300 AND SPRAS ='E'
-#                         ''',conn1)
-
-#     fran_sale_df = franchiseDf.merge(
-#         cus_df, how='left', left_on=['ibl_customer_code'], right_on=['SAP_CUSTOMER_CODE'])
-
-#     fran_sale_df = fran_sale_df.merge(
-#         branch_df, how='left', left_on=['branch_code'], right_on=['sap_branch_code'])
-
-#     fran_sale_df['ref_customer_code'] = np.where(fran_sale_df['SAP_CUSTOMER_CODE'].isnull(), franchiseDf['ibl_distributor_code'].astype(
-#         str)+'-'+franchiseDf['ibl_customer_code'].astype(str)
-#                 , franchiseDf['ibl_customer_code']
-#                     )
-
-#     fran_sale_df.drop(['SAP_CUSTOMER_CODE', 'ADRNR','sap_branch_code'], inplace=True, axis=1)
-#     dataFile=f'''{filePath}franchiseData.parquet'''
+taskInsertSapRecords=PythonOperator(
+    task_id='insertSapAttendanceRecords'
+    ,python_callable=insertAttendanceIntoSap
+    ,dag=attendanceSynchDag
+)
     
-#     fran_sale_df['transfer_date'] = datetime.now()
-#     column_name = ["company_code",
-#                     "ibl_distributor_code",
-#                     "ibl_distributor_desc",
-#                     "branch_code",
-#                     "branch_desc",
-#                     "distributor_location_id",
-#                     "distributor_location_desc",
-#                     "order_no",
-#                     "invoice_number",
-#                     "invoice_date",
-#                     "channel",
-#                     "distributor_customer_code",
-#                     "ibl_customer_code",
-#                     "ref_customer_code",
-#                     "ibl_customer_name",
-#                     "brick_code",
-#                     "brick_name",
-#                     "ADD1",
-#                     "ADD2",
-#                     "ADD3",
-#                     "distributor_item_code",
-#                     "ibl_item_code",
-#                     "ibl_item_description",
-#                     "sold_qty",
-#                     "gross_amount",
-#                     "bonus_qty",
-#                     "discount",
-#                     "reason",
-#                     "data_loading_date",
-#                     "transfer_date",
-#                     "record_date",
-#                     "address"
-#                 ]
-#     fran_sale_df=fran_sale_df.reindex(columns=column_name)
-
-#     fran_sale_df.to_parquet(dataFile,index=False)
-#     df1=pd.read_parquet(dataFile)
-#     print(df1.info())
-    
-#     project_id = 'data-light-house-prod'
-#     client=bigquery.Client(credentials=credentials,project=project_id)
-#     job_config = bigquery.LoadJobConfig(
-#         write_disposition=bigquery.WriteDisposition.WRITE_TRUNCATE,
-#         source_format=bigquery.SourceFormat.PARQUET,
-#     )    
-
-#     # filePath = dataFile
-#     with open(dataFile,"rb") as source_file:
-#         load_job = client.load_table_from_file(
-#             source_file, tableId, job_config=job_config
-#         )  
-
-#         load_job.result()  # Waits for the job to complete.    
-
-#     # df to table
-#     # pandas_gbq.to_gbq(franchiseDf, f'{GCS_PROJECT}.{DATA_SET_ID}.{tableId}', project_id=GCS_PROJECT, if_exists='replace')
-
-#     print('done.....................')
-
-# def getFranchiseDataDfSql():
-#     # global
-#     sqlData=f'''select
-#                 '6300' company_code,
-#                 ibl_distributor_code,
-#                 ibl_distributor_desc,
-#                 branch_code,
-#                 distributor_location_id,
-#                 distributor_location_desc,
-#                 order_no,
-#                 invoice_number,
-#                 invoice_date,
-#                 channel,
-#                 distributor_customer_code,
-#                 ibl_customer_code,
-#                 ibl_customer_name,
-#                 distributor_item_code,
-#                 ibl_item_code,
-#                 ibl_item_description,
-#                 sold_qty,
-#                 gross_amount,
-#                 bonus_qty,
-#                 discount,
-#                 reason,
-#                 address,
-#                 cast(to_char(record_date,'yyyymmdd')  as numeric) as record_date,
-#                 brick_code,brick_name
-#             from franchise.franchise_data fd     
-#             where 1=1 and invoice_date between {vStartDate} and {vEndDate}
-#             '''
-
-#     franchiseDf=pd.read_sql(sqlData,con=franchiseEngine)
-#     franchiseDf['invoice_date']=pd.to_datetime(franchiseDf['invoice_date']) 
-#     print(franchiseDf)
-
-#     conn1=sapConn
-#     cus_df=pds.read_sql(f'''
-#                         SELECT distinct  KUNNR as "SAP_CUSTOMER_CODE"
-#                         ,ADRNR
-#                         ,A.STR_SUPPL1 add1,
-#                         A.STR_SUPPL2 add2,A.STR_SUPPL3 add3
-#                         FROM SAPABAP1.KNA1 AS B
-#                         LEFT OUTER JOIN SAPABAP1.ADRC AS A ON (A.CLIENT=B.MANDT AND A.ADDRNUMBER=B.ADRNR)
-#                         WHERE 1=1 AND MANDT=300
-#                         ''',conn1)
-
-#     branch_df=pds.read_sql(f'''
-#                         SELECT distinct  VKBUR "sap_branch_code",BEZEI "branch_desc"
-#                         FROM SAPABAP1.TVKBT BRANCH WHERE MANDT=300 AND SPRAS ='E'
-#                         ''',conn1)
-
-#     fran_sale_df = franchiseDf.merge(
-#         cus_df, how='left', left_on=['ibl_customer_code'], right_on=['SAP_CUSTOMER_CODE'])
-
-#     fran_sale_df = fran_sale_df.merge(
-#         branch_df, how='left', left_on=['branch_code'], right_on=['sap_branch_code'])
-
-#     fran_sale_df['ref_customer_code'] = np.where(fran_sale_df['SAP_CUSTOMER_CODE'].isnull(), franchiseDf['ibl_distributor_code'].astype(
-#         str)+'-'+franchiseDf['ibl_customer_code'].astype(str)
-#                 , franchiseDf['ibl_customer_code']
-#                     )
-
-#     fran_sale_df.drop(['SAP_CUSTOMER_CODE', 'ADRNR','sap_branch_code'], inplace=True, axis=1)
-#     dataFile=f'''{filePath}franchiseData.parquet'''
-    
-#     fran_sale_df['transfer_date'] = datetime.now()
-#     column_name = ["company_code",
-#                     "ibl_distributor_code",
-#                     "ibl_distributor_desc",
-#                     "branch_code",
-#                     "branch_desc",
-#                     "distributor_location_id",
-#                     "distributor_location_desc",
-#                     "order_no",
-#                     "invoice_number",
-#                     "invoice_date",
-#                     "channel",
-#                     "distributor_customer_code",
-#                     "ibl_customer_code",
-#                     "ref_customer_code",
-#                     "ibl_customer_name",
-#                     "brick_code",
-#                     "brick_name",
-#                     "ADD1",
-#                     "ADD2",
-#                     "ADD3",
-#                     "distributor_item_code",
-#                     "ibl_item_code",
-#                     "ibl_item_description",
-#                     "sold_qty",
-#                     "gross_amount",
-#                     "bonus_qty",
-#                     "discount",
-#                     "reason",
-#                     "data_loading_date",
-#                     "transfer_date",
-#                     "record_date",
-#                     "address"
-#                 ]
-#     fran_sale_df=fran_sale_df.reindex(columns=column_name)
-
-#     # df to table
-#     pandas_gbq.to_gbq(fran_sale_df, f'{GCS_PROJECT}.{DATA_SET_ID}.{tableId}', project_id=GCS_PROJECT, if_exists='append')
-#     print('done.....................')
-
-# #Franchise Stock
-# def deleteFranchiseStockRecords():
-#     print('vstart date ',vStartDate)
-#     print('vEnd Date ', vEndDate)
-
-#     delQuery=f'''delete from data-light-house-prod.EDW.franchise_stock
-#                     where dated  between {vStartDate} and {vEndDate}
-#       '''   
-
-#     job=bigQueryClient.query(delQuery)
-#     job.result()
-
-# def getFranchiseStock():
-#     tableId='franchise_stock'
-
-#     sqlGetStock=f'''     
-#             select 
-#             company_code,
-#             ibl_distributor_code,
-#             dated,
-#             distributor_item_code,
-#             ibl_item_code,
-#             distributor_item_description,
-#             lot_number,
-#             expiry_date,
-#             stock_qty,
-#             stock_value,
-#             ibl_branch_code,
-#             price,
-#             in_transit_stock,
-#             purchase_unit,
-#             created_date
-#             from franchise_stock fs2
-#             where 1=1 and dated between {vStartDate} and {vEndDate}           
-#             '''    
-          
-#     franchiseStock=pd.read_sql(sqlGetStock,con=franchiseEngine)
-
-#     # dataframe type conversion
-#     convert_dict = {
-#                     'company_code': 'string'
-#                     ,'ibl_distributor_code': 'int32'
-#                     ,'distributor_item_code': 'string'
-#                     ,'ibl_item_code': 'string'
-#                     ,'distributor_item_description': 'string'
-#                     ,'lot_number':'string'
-#                     ,'stock_qty':'float32'
-#                     ,'stock_value':'float32'
-#                     ,'ibl_branch_code':'string'
-#                     ,'price':'float32'
-#                     ,'in_transit_stock':'float32'
-#                     ,'purchase_unit':'float32'
-#                 }
-#     franchiseStock = franchiseStock.astype(convert_dict)
-#     franchiseStock['dated']=pd.to_datetime(franchiseStock['dated'])
-#     franchiseStock['expiry_date']=pd.to_datetime(franchiseStock['expiry_date'])
-#     franchiseStock['created_date']=pd.to_datetime(franchiseStock['created_date'])
-#     franchiseStock['transfer_date'] = datetime.now()
-
-#     pandas_gbq.to_gbq(franchiseStock, f'{GCS_PROJECT}.{DATA_SET_ID}.{tableId}', project_id=GCS_PROJECT, if_exists='append')
-#     print('done.....................')
-
-
-# # Franchise Targets..
-# def delFranchiseTargets():
-#     delQuery=f'''
-#                 delete from data-light-house-prod.EDW.franchise_targets
-#                 where 1=1 and cast(target_month as date) between {vStartDate} and {vEndDate}
-#                 '''                
-
-#     job=bigQueryClient.query(delQuery)
-#     job.result()
-    
-# def insertFranchiseTargets():
-#     tableId='franchise_targets'
-#     sqlGetStock=f'''     
-#             select
-#                 tmonth target_month_key,
-#                 rd_code,
-#                 rd_name,
-#                 "Trg_val" target_value,
-#                 trg_month target_month,
-#                 "Trg_year" target_year
-#             from
-#                 franchise.rd_targets rt 
-#             where 1=1 and cast(trg_month as date) between {vStartDate} and {vEndDate}            '''
-            
-
-#     franchiseStock=pd.read_sql(sqlGetStock,con=franchiseEngine)
-
-#     # dataframe type conversion
-#     convert_dict = {
-#                     'target_month_key': 'string'
-#                     ,'rd_code': 'int32'
-#                     ,'rd_name': 'string'
-#                     ,'target_value':'float32'
-#                     ,'target_year': 'int32'
-#                 }
-    
-#     franchiseStock = franchiseStock.astype(convert_dict)
-#     franchiseStock['target_month']=pd.to_datetime(franchiseStock['target_month'])
-#     franchiseStock['transfer_date'] = datetime.now()
-
-#     pandas_gbq.to_gbq(franchiseStock, f'{GCS_PROJECT}.{DATA_SET_ID}.{tableId}', project_id=GCS_PROJECT, if_exists='append')
-#     print('done.....................')
-
-
-# deleteRecords() 
-# getFranchiseDataDfSql()
-# deleteFranchiseStockRecords()
-# getFranchiseStock()
-# delFranchiseTargets()
-# insertFranchiseTargets()
-
-# taskDeleteStockRec=PythonOperator(
-#                 task_id='deleteFranchiseStock'
-#                 ,python_callable=deleteFranchiseStockRecords
-#                 ,dag=franchise_sale_merging
-# )
-
-# taskInsertStockRec=PythonOperator(
-#                 task_id='insertFranchiseStock'
-#                 ,python_callable=getFranchiseStock
-#                 ,dag=franchise_sale_merging
-# )
-
-# taskDeleteRecrods=PythonOperator(
-#                 task_id='deletingRecords'
-#                 ,python_callable=deleteRecords
-#                 ,dag=franchise_sale_merging
-#                 )
-
-# taskInsertingRecords=PythonOperator(
-#                 task_id='insertingRecords'
-#                 ,python_callable=getFranchiseDataDfSql
-#                 ,dag=franchise_sale_merging
-#                 )
-
-# [
-#     taskDeleteRecrods>>taskInsertingRecords
-#     ,taskDeleteStockRec>>taskInsertStockRec
-#  ]
+taskDelAttendanceRecords>>dummy_task>>[taskGetAttendanceRecords,taskApiAttendanceRecords>>taskDelSapRecords,taskInsertSapRecords]
+# >>dummy_task>>[taskDelSapRecords>>taskInsertSapRecords]
+# dummy_task>>taskDelAttendanceRecords[taskGetAttendanceRecords,taskApiAttendanceRecords]    
+# [ taskDelAttendanceRecords,taskDelSapRecords]>>[taskGetAttendanceRecords>>taskApiAttendanceRecords]>>taskInsertSapRecords
+ 
 
 
