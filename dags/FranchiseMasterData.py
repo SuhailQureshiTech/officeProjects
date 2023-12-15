@@ -171,11 +171,14 @@ def users():
     df.columns = df.columns.str.strip()
 
     df['id']=df['id'].astype('int')
+    df['role_id'].fillna(0,inplace=True)
     df['role_id']=df['role_id'].astype('int')
     df['location_id'].fillna(0,inplace=True)
     df['location_id']=df['location_id'].astype('int')
     df['created_at'] = pd.to_datetime(df['created_at'])   
     df['transfer_date'] = creationDate
+
+    # print(df.info())
 
     # for char in spec_chars:
     #     df['id'] = df['id'].str.replace(
@@ -279,6 +282,7 @@ def roles():
     df['roles_name'] = df['roles_name'].astype(pd.StringDtype())
     df['transfer_date'] = creationDate
 
+    # print(df.info())
     df.to_parquet('roles.parquet')
     df1=pd.read_parquet('roles.parquet')
 
