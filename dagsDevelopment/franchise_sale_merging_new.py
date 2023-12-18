@@ -111,8 +111,11 @@ now = datetime.now()
 current_time = now.time()
 
 
-vStartDate="'"+str(vStartDate)+"'"
-vEndDate="'"+str(vEndDate)+"'"
+# vStartDate="'"+str(vStartDate)+"'"
+# vEndDate="'"+str(vEndDate)+"'"
+
+vStartDate="'"+'2023-10-01'+"'"
+vEndDate="'"+'2023-11-30'+"'"
 
 print('else : from date :', vStartDate)
 print('else : enmd date :', vEndDate)
@@ -148,7 +151,7 @@ franchise_sale_merging = DAG(
     default_args=default_args,
     catchup=False,
     start_date=datetime(2023, 11, 20),
-    schedule_interval='00 04 * * *',
+    schedule='00 04 * * *',
     # schedule_interval=None,
     # on_success_callback=success_function,
     # email_on_failure=failure_email_function,
@@ -408,14 +411,12 @@ def deleteFranchiseStockRecords():
 
     delQuery=f'''delete from data-light-house-prod.EDW.franchise_stock
                     where dated  between {vStartDate} and {vEndDate}
-      '''   
-
+      '''
     job=bigQueryClient.query(delQuery)
     job.result()
 
 def getFranchiseStock():
     tableId='franchise_stock'
-
     sqlGetStock=f'''     
             select 
             company_code,
@@ -434,9 +435,9 @@ def getFranchiseStock():
             purchase_unit,
             created_date
             from franchise_stock fs2
-            where 1=1 and dated between {vStartDate} and {vEndDate}           
-            '''    
-          
+                '''
+            # where 1=1 and dated='2023-12-10'
+
     franchiseStock=pd.read_sql(sqlGetStock,con=franchiseEngine)
 
     # dataframe type conversion
@@ -464,84 +465,38 @@ def getFranchiseStock():
     print('done.....................')
 
 
-# Franchise Targets..
-def delFranchiseTargets():
-    delQuery=f'''
-                delete from data-light-house-prod.EDW.franchise_targets
-                where 1=1 and cast(target_month as date) between {vStartDate} and {vEndDate}
-                '''                
-
-    job=bigQueryClient.query(delQuery)
-    job.result()
-    
-def insertFranchiseTargets():
-    tableId='franchise_targets'
-    sqlGetStock=f'''     
-            select
-                tmonth target_month_key,
-                rd_code,
-                rd_name,
-                "Trg_val" target_value,
-                trg_month target_month,
-                "Trg_year" target_year
-            from
-                franchise.rd_targets rt 
-            where 1=1 and cast(trg_month as date) between {vStartDate} and {vEndDate}            '''
-            
-
-    franchiseStock=pd.read_sql(sqlGetStock,con=franchiseEngine)
-
-    # dataframe type conversion
-    convert_dict = {
-                    'target_month_key': 'string'
-                    ,'rd_code': 'int32'
-                    ,'rd_name': 'string'
-                    ,'target_value':'float32'
-                    ,'target_year': 'int32'
-                }
-    
-    franchiseStock = franchiseStock.astype(convert_dict)
-    franchiseStock['target_month']=pd.to_datetime(franchiseStock['target_month'])
-    franchiseStock['transfer_date'] = datetime.now()
-
-    pandas_gbq.to_gbq(franchiseStock, f'{GCS_PROJECT}.{DATA_SET_ID}.{tableId}', project_id=GCS_PROJECT, if_exists='append')
-    print('done.....................')
-
-
-# deleteRecords() 
-# getFranchiseDataDfSql()
+deleteRecords() 
+getFranchiseDataDfSql()
 # deleteFranchiseStockRecords()
 # getFranchiseStock()
-delFranchiseTargets()
-insertFranchiseTargets()
 
-# taskDeleteStockRec=PythonOperator(
-#                 task_id='deleteFranchiseStock'
-#                 ,python_callable=deleteFranchiseStockRecords
-#                 ,dag=franchise_sale_merging
-# )
+taskDeleteStockRec=PythonOperator(
+                task_id='deleteFranchiseStock'
+                ,python_callable=deleteFranchiseStockRecords
+                ,dag=franchise_sale_merging
+)
 
-# taskInsertStockRec=PythonOperator(
-#                 task_id='insertFranchiseStock'
-#                 ,python_callable=getFranchiseStock
-#                 ,dag=franchise_sale_merging
-# )
+taskInsertStockRec=PythonOperator(
+                task_id='insertFranchiseStock'
+                ,python_callable=getFranchiseStock
+                ,dag=franchise_sale_merging
+)
 
-# taskDeleteRecrods=PythonOperator(
-#                 task_id='deletingRecords'
-#                 ,python_callable=deleteRecords
-#                 ,dag=franchise_sale_merging
-#                 )
+taskDeleteRecrods=PythonOperator(
+                task_id='deletingRecords'
+                ,python_callable=deleteRecords
+                ,dag=franchise_sale_merging
+                )
 
-# taskInsertingRecords=PythonOperator(
-#                 task_id='insertingRecords'
-#                 ,python_callable=getFranchiseDataDfSql
-#                 ,dag=franchise_sale_merging
-#                 )
+taskInsertingRecords=PythonOperator(
+                task_id='insertingRecords'
+                ,python_callable=getFranchiseDataDfSql
+                ,dag=franchise_sale_merging
+                )
 
-# [
-#     taskDeleteRecrods>>taskInsertingRecords
-#     ,taskDeleteStockRec>>taskInsertStockRec
-#  ]
+[
+    taskDeleteRecrods>>taskInsertingRecords
+    ,taskDeleteStockRec>>taskInsertStockRec
+ ]
 
 

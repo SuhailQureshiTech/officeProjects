@@ -542,8 +542,8 @@ def insertFranchisStockData():
 #     ,dag=searle_merging
 # )
 
-# deleteRecords()
-# insertIblgrpHcmData()
+deleteRecords()
+insertIblgrpHcmData()
 # QueryBigQuerySalesData()
 # QueryBigQueryCustomerData()
 # delEbsRecords()
