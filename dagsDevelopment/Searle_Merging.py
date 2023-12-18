@@ -178,7 +178,7 @@ def deleteRecords():
     print(vStartDate, ' ', vEndDate)
     try:
         QdelRecords = f'''DELETE FROM {oracleTable}
-                        where 1=1 and to_char(BILL_dt,'yyyy-mm-dd') between {vStartDate} and {vEndDate}                        
+                        where 1=1 and to_char(BILL_dt,'yyyy-mm-dd') between '01-Nov-23' and '30-Nov-23'               
         '''
         
         oracleCursor.execute(QdelRecords)
@@ -212,7 +212,7 @@ def insertIblgrpHcmData():
                 sum(QUANTITY) SOLD_QTY
                 ,sum(AMOUNT) GROSS,round(IFNULL(unit_selling_price,0))  unit_selling_price
                 FROM `data-light-house-prod.EDW.VW_SEARLE_SALES`
-                WHERE 1=1 and BILLING_DATE  between {vStartDate} and {vEndDate}
+                WHERE 1=1 and BILLING_DATE  between '2023-11-01' and '2023-11-30'
                 GROUP BY
                 FORMAT_DATE('%d-%b-%y',BILLING_DATE) ,        item_code ,item_desc ,
                 ORG_ID ,    ORG_DESC ,  CHANNEL_DESC,DATA_FLAG,unit_selling_price
@@ -373,8 +373,9 @@ def delEbsRecords():
     oracleTable='ebs_invoice_order' 
     delQuery=f''' 
                 delete from {oracleTable} 
-                    where 1=1 and invoice_date_ibl between {vStartOracleDate} and {vEndOracleDate}
+                    where 1=1 and invoice_date_ibl between '01-Nov-23' and '30-Nov-23'
             '''
+    #  invoice_date_ibl between {vStartOracleDate} and {vEndOracleDate}
 
     oracleAlchemy.execute(delQuery)
     print('done.....................')
@@ -409,9 +410,10 @@ def getEbsInvoiceOrderDataDfSql():
                 tax_recoverable,
                 customer_trx_id            
                 FROM data-light-house-prod.EDW.EBS_INVOICE_ORDER_VW 
-                where 1=1 and invoice_date_ibl between {vStartDate} and {vEndDate}
+                where 1=1 and invoice_date_ibl between '2023-11-01' and '2023-11-30'
             '''
-    
+        # {vStartDate} and {vEndDate}
+
     df=pd.DataFrame()   
     df = bigQueryClient.query(sqlData).to_dataframe()
 

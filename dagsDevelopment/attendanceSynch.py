@@ -170,9 +170,12 @@ def delAttendanceRec():
     print('vEnd Date ', vEndDate)
 
     sqlDelRec=f'''
-                DELETE FROM attendance.pioneer_attendance pa
-                WHERE  1 = 1
-                    AND Cast(pa.punch_datetime AS DATE) BETWEEN {vStartDate} AND {vEndDate} 
+                DELETE
+                FROM
+                attendance.pioneer_attendance pa 
+                WHERE
+                1 = 1 
+                AND Cast(pa.punch_datetime AS DATE) BETWEEN {vStartDate} AND {vEndDate}         
                 '''
 
     result=poineerSqlAlchemy.execute(sqlDelRec)
@@ -184,18 +187,23 @@ def getAttendance():
     print('vEnd Date ', vEndDate)
 
     sqlGetRec=f'''
-        SELECT 300                    mandt,
-            tran_machinerawpunchid transaction_id,
-            cardno                 employee_id,
-            punchdatetime          punch_datetime,
-            machineno              device_no,
-            '01'                   status,
-            p_day P_Day,
-            ismanual ISManual,
-            'DB-RECORDS'           data_flag
-        FROM   tran_machinerawpunch trn
-        WHERE  1=1 AND Cast(punchdatetime AS DATE) BETWEEN {vStartDate} AND {vEndDate}  AND temp <> 'API'                    
-    '''            
+                SELECT
+                300 mandt,
+                tran_machinerawpunchid transaction_id,
+                cardno employee_id,
+                punchdatetime punch_datetime,
+                machineno device_no,
+                '01' status,
+                p_day P_Day,
+                ismanual ISManual,
+                'DB-RECORDS' data_flag 
+                FROM
+                tran_machinerawpunch trn 
+                WHERE
+                1 = 1 
+                AND Cast(punchdatetime AS DATE) BETWEEN {vStartDate} AND {vEndDate} 
+                AND temp <> 'API'
+           '''            
     
     franchiseDf=pd.read_sql(sqlGetRec,con=attendance66)
     franchiseDf['punch_datetime']=pd.to_datetime(franchiseDf['punch_datetime']) 
@@ -242,8 +250,7 @@ def getApiRecords():
 
     df = df.rename(
         columns={'No': 'transaction_id', 'Employee ID': 'employee_id', 'PunchDatetime': 'punch_datetime'
-                 ,'Device No': 'device_no', 'Status': 'status'
-                 }
+                 ,'Device No': 'device_no', 'Status': 'status'}
                 )
 
 
@@ -279,54 +286,67 @@ def insertAttendanceIntoSap():
     # '''    
 
     sqlGetRec=f'''
-        SELECT 300      mandt,
-            Min(tmid)tmid,
-            cardno,
-            date1,
-            p_day,
-            ismanual,
-            0        machine,
-            Min(time)time,
-            'In'     inout1,
-            flag
-        FROM   attendance.vw_attendance_inout_rec
-        WHERE  1 = 1
-            AND date1 BETWEEN {vStartSapDate} AND {vEndSapDate}
-        GROUP  BY cardno,
+                SELECT
+                300 mandt,
+                Min(tmid)tmid,
+                cardno,
+                date1,
+                p_day,
+                ismanual,
+                0 machine,
+                Min(time)time,
+                'In' inout1,
+                flag 
+                FROM
+                attendance.vw_attendance_inout_rec 
+                WHERE
+                1 = 1 
+                AND date1 BETWEEN {vStartSapDate} AND {vEndSapDate} 
+                GROUP BY
+                cardno,
+                date1,
+                p_day,
+                ismanual,
+                flag 
+                UNION ALL
+                SELECT
+                300 mandt,
+                Max(tmid)tmid,
+                cardno,
+                date1,
+                p_day,
+                ismanual,
+                0 machine,
+                Max(time)time,
+                'Out' inout1,
+                flag 
+                FROM
+                attendance.vw_attendance_inout_rec 
+                WHERE
+                1 = 1 
+                AND date1 BETWEEN {vStartSapDate} AND {vEndSapDate} 
+                AND Concat(tmid, cardno, date1, p_day, ismanual, time, flag) NOT IN 
+                (
+                    SELECT
+                        Concat(Min(tmid), cardno, date1, p_day, ismanual, Min(time), flag) 
+                    FROM
+                        attendance.vw_attendance_inout_rec 
+                    WHERE
+                        1 = 1 
+                    GROUP BY
+                        cardno,
+                        date1,
+                        p_day,
+                        ismanual,
+                        flag
+                )
+                GROUP BY
+                cardno,
                 date1,
                 p_day,
                 ismanual,
                 flag
-        UNION ALL
-        SELECT 300      mandt,
-            Max(tmid)tmid,
-            cardno,
-            date1,
-            p_day,
-            ismanual,
-            0        machine,
-            Max(time)time,
-            'Out'    inout1,
-            flag
-        FROM   attendance.vw_attendance_inout_rec
-        WHERE  1 = 1
-            AND date1 BETWEEN {vStartSapDate} AND {vEndSapDate}
-            AND Concat(tmid, cardno, date1, p_day, ismanual, time, flag) NOT IN
-                (SELECT Concat(Min(tmid), cardno, date1, p_day, ismanual, Min(time),flag)
-                    FROM  attendance.vw_attendance_inout_rec
-                    WHERE  1=1
-                    GROUP  BY cardno,
-                                date1,
-                                p_day,
-                                ismanual,
-                                flag)
-        GROUP  BY cardno,
-                date1,
-                p_day,
-                ismanual,
-                flag     
-    '''    
-
+    '''  
 
     dfRec=pd.read_sql(sqlGetRec,con=poineerSqlAlchemy) 
     print('Total number of rows inserted in SAP ',len(dfRec))
@@ -342,19 +362,20 @@ def insertAttendanceIntoSap():
 
 def insertIntoAttendance66():
     sqlGetRecords=f''' 
-                SELECT
-                cardno CardNo,
-                CAST(concat(SUBSTRING(CAST(date1 AS text), 1, 4), '-', SUBSTRING(CAST(date1 AS text), 5, 2), '-', SUBSTRING(CAST(date1 AS text), 7, 2), ' ', SUBSTRING(time, 1, 2), ':', SUBSTRING(time, 3, 2), ':', SUBSTRING(time, 5, 2)
-                ) AS timestamp) PunchDatetime,
-                machine MachineNo,
-                p_day P_Day,
-                ismanual ISManual,
-                inout1 inout,
-                data_flag temp
-                FROM attendance.vw_attendance_inout_rec a
-                WHERE 1 = 1
-                AND date1 BETWEEN '{vStartSapDate}' AND '{vEndSapDate}'
-                AND data_flag = 'API'             
+                    SELECT
+                    cardno CardNo,
+                    CAST(concat(SUBSTRING(CAST(date1 AS text), 1, 4), '-', SUBSTRING(CAST(date1 AS text), 5, 2), '-', SUBSTRING(CAST(date1 AS text), 7, 2), ' ', SUBSTRING(time, 1, 2), ':', SUBSTRING(time, 3, 2), ':', SUBSTRING(time, 5, 2) ) AS timestamp) PunchDatetime,
+                    machine MachineNo,
+                    p_day P_Day,
+                    ismanual ISManual,
+                    inout1 inout,
+                    data_flag temp 
+                    FROM
+                    attendance.vw_attendance_inout_rec a 
+                    WHERE
+                    1 = 1 
+                    AND date1 BETWEEN '{vStartSapDate}' AND '{vEndSapDate}' 
+                    AND data_flag = 'API'           
             '''
 
     df=pd.read_sql(sqlGetRecords,con=poineerSqlAlchemy)
@@ -372,14 +393,16 @@ def insertIntoAttendance66():
     print('total number of record inserted into 66 machine are  : ',len(df))
 
     sqlDelExistsRecords=f'''
-            delete from Tran_MachineRawPunch_tmp
-            WHERE 1 = 1
-                and concat(cardno, punchdatetime, machineno, p_day, ismanual, inout) in (
-                SELECT concat(cardno, punchdatetime, machineno, p_day, ismanual, inout)
-                from  Tran_MachineRawPunch tmrp
-                where  1 = 1  and cast(PunchDatetime as date) BETWEEN {vStartDate} and {vEndDate}  and temp = 'API'
-                            )
-            '''
+                delete
+                from Tran_MachineRawPunch_tmp 
+                WHERE 1 = 1 
+                and concat(cardno, punchdatetime, machineno, p_day, ismanual, inout) in 
+                (SELECT concat(cardno, punchdatetime, machineno, p_day, ismanual, inout) 
+                    from Tran_MachineRawPunch tmrp 
+                    where
+                        1 = 1 and cast(PunchDatetime as date) BETWEEN {vStartDate} and {vEndDate} and temp = 'API' 
+                )
+    '''
     attendance66.execute(sqlDelExistsRecords)
 
     sqlInsertData=f'''
