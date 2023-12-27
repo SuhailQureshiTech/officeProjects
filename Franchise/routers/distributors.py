@@ -2,6 +2,7 @@
 from datetime import date, datetime, timedelta, timezone
 import time
 from io import BytesIO
+from typing import Optional
 from fastapi import APIRouter, Depends, status, UploadFile, File, HTTPException,Request
 from fastapi.responses import FileResponse
 from numpy import datetime64, int64
@@ -16,6 +17,7 @@ from . import dateLib
 import tkinter as tk
 # from tkinter import filedialog
 from franchise.hashing import Hash
+distMappingDf=pd.DataFrame()
 
 spec_chars = ["!", '"', "#", "%", "&", "'" ,"\(","\)"
     ,"\*" ,"\+"  ,","   ,"-" , "/"  ,":",";", "<","=", ">"
@@ -31,11 +33,64 @@ router = APIRouter(
 conn_string =  'postgresql://franchise:franchisePassword!123!456@35.216.155.219:5432/franchise_db'
 today = date.today()
 
+
 @router.post('/uploadSalesData/{company_code}/{user_id}', status_code=status.HTTP_201_CREATED)
 async def upload_sales_file(company_code, user_id, request: Request, files: UploadFile = File(...)):
 
+    db = create_engine(conn_string)
+    conn = db.connect()
+
+    getSapCustomer=f''' 
+                    SELECT sap_cust 
+                    FROM franchise.sap_customer x
+            '''
+    
+    getSapItems=f''' 
+                select distinct  item_code  from sap_items
+                '''
+    dfSapCustomers=pd.read_sql(getSapCustomer,con=conn,index_col=None)
+    dfSapItems=pd.read_sql(getSapItems,con=conn,index_col=None)
+
     df = pd.read_excel(BytesIO(files.file.read()), sheet_name="Sales")  
+
     df.columns = df.columns.str.strip()
+    dfFileIBlCustomers=pd.DataFrame(df['IBL Customer Number'].unique()
+                                    ).astype(str)
+
+    dfFileIBlItems=pd.DataFrame(df['IBL Item Code'].unique()
+                                    ).astype(str)
+
+    dfFileIBlCustomers.columns=['file_cust']
+    dfFileIBlItems.columns=['file_item']
+
+    invalidDfCustomer = dfFileIBlCustomers.merge(
+    dfSapCustomers, how='left', left_on=['file_cust'], right_on=['sap_cust'])
+    new=pd.DataFrame(invalidDfCustomer[invalidDfCustomer.sap_cust.isnull()])
+    invalidCustLIst=[]
+    for x in new['file_cust'].unique():
+        dateFound=str(x)
+        # print('string' ,x)
+        invalidCustLIst.append(dateFound)    
+
+    d_cust_list_string ="'"+"','".join(invalidCustLIst)+"'"        
+
+#   items....
+    invalidDfItems = dfFileIBlItems.merge(
+    dfSapItems, how='left', left_on=['file_item'], right_on=['item_code'])
+    print(invalidDfItems.info())
+    print(invalidDfItems)
+
+    newItems=pd.DataFrame(invalidDfItems[invalidDfItems.item_code.isnull()])
+    invalidItemsLIst=[]
+    for x in newItems['file_item'].unique():
+        dateFound=str(x)
+        # print('string' ,x)
+        invalidItemsLIst.append(dateFound)    
+
+    d_items_list_string ="'"+"','".join(invalidItemsLIst)+"'"  
+    print('invalid items ')
+    print(d_items_list_string)      
+
     def checkColumnsinFile():
 
         if '.xlsx' not in  files.filename:
@@ -197,27 +252,30 @@ async def upload_sales_file(company_code, user_id, request: Request, files: Uplo
 
         if df['Franchise Customer Number'].isnull().values.any():
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Franchise Customer Number cannot be null")        
-            
+                    detail="Franchise Customer Number cannot be null")       
+
+        if len(invalidCustLIst)>0:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f''' Invalid IBL Customer Number found : {d_cust_list_string}  '''
+                    )    
+
         if df['IBL Customer Number'].dtypes != int64:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                     detail="IBL Customer Number cannot be null and must not contains alphanumeric")    
 
-        if df['IBL Customer Number'].apply(lambda x: len(str(x))>10).any():
+        # if df['Name'].apply(lambda x: len(str(x))!=10).any():
+        if df['IBL Customer Number'].apply(lambda x: len(str(x))!=10).any():
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="IBL Customer Number length must not greater than 10 character")                 
+                    detail="Invalid (IBL Customer Number) ...")                 
 
         dfCheckFranIblCus=df.query(" `IBL Customer Number`==`Franchise Code`  ")
         if len(dfCheckFranIblCus)>0:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                     detail="Franchise Code is not allowed to be in IBL Customer Number")                 
 
-
-
         if df['RD Customer Name'].isnull().values.any():
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                     detail="RD Customer Name cannot be null")        
-
 
         if df['IBL Customer Name'].isnull().values.any():
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
@@ -232,6 +290,11 @@ async def upload_sales_file(company_code, user_id, request: Request, files: Uplo
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                     detail="whitespaces found")      
 
+        if len(invalidItemsLIst)>0:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f''' Invalid IBL Item code found : {d_items_list_string}  '''
+                    )  
+        
         if df['IBL Item Code'].apply(lambda x: len(str(x))>11 ).any() or df['IBL Item Code'].apply(lambda x: len(str(x))<10).any():
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                     detail="IBL Item Code length must not greater than 11 character")        
@@ -305,9 +368,6 @@ async def upload_sales_file(company_code, user_id, request: Request, files: Uplo
     checkColumnsinFile()
     validateData()
 
-    db = create_engine(conn_string)
-    conn = db.connect()
-
     print('dates', df['Franchise Customer Invoice Date'].unique())
 
     df['Franchise Customer Invoice Date'] = pd.to_datetime(
@@ -377,6 +437,7 @@ async def upload_sales_file(company_code, user_id, request: Request, files: Uplo
     dataDetailsdf.to_sql('users_activity_log', schema="franchise",
                         if_exists='append', con=conn, index=False)
     
+    # Rough
     # dataDetailsdf.to_csv("d:\\temp\\dataDetails.csv",index=False)
 
     # dataDetailsdf.to_csv(f''' dataDetails.csv''',index=False)
@@ -384,6 +445,8 @@ async def upload_sales_file(company_code, user_id, request: Request, files: Uplo
     # return FileResponse(path="dataDetails.csv", filename="d:\\temp\\dataDetails.csv"
     #                     , media_type="multipart/form-data")
     
+    # rough -- End
+        
     return {
         "Sales_Quantity": int(total_sales_quantity),
         "Sales_Gross_Amount": int(total_sales_gross_amount),
@@ -394,8 +457,8 @@ async def upload_sales_file(company_code, user_id, request: Request, files: Uplo
     }
 
 @router.post('/uploadStockData/{company_code}/{user_id}', status_code=status.HTTP_201_CREATED)
-async def upload_stock_file(company_code, user_id, stockFiles: UploadFile = File(...)):
-    
+async def upload_stock_file(company_code, user_id, stockFiles: UploadFile = File(...)):   
+
     df = pd.read_excel(BytesIO(stockFiles.file.read()), sheet_name='Stock')
 
     def checkColumnsinFile():    
@@ -546,6 +609,16 @@ async def upload_stock_file(company_code, user_id, stockFiles: UploadFile = File
     d_list_string ="'"+"','".join(dateLIst)+"'"
     delete_query = "delete from franchise_stock where 1=1 and dated in (" +d_list_string+")"+" and ibl_distributor_code="+"'"+str(user_id)+"'"
     print(delete_query)
+    result=conn.execute(delete_query)
+    rowCounts=result.rowcount
+    print(f''' delte row count {rowCounts}   ''')
+
+    # print(delete_query)
+
+    # result = conn.execute(delete_query)
+    # rowCounts=result.rowcount
+    # print(f''' delte row count {rowCounts}   ''')
+
 
     df.columns = ['ibl_distributor_code','ibl_branch_code', 'distributor_item_code', 'ibl_item_code',
                   'distributor_item_description'
@@ -677,6 +750,52 @@ async def upload_sales_file_new(company_code,  files: UploadFile = File(...)):
               )
 
 # Reports...
+
+@router.get('/getDistMapping')
+async def allDistMapping(romId: Optional[str]=None):
+    db = create_engine(conn_string)
+    conn = db.connect()
+    if romId==None:
+        sqlRec=f'''
+            select
+                id,
+                distributor_id ,
+                username ,
+                location_id ,
+                location_name ,
+                branch_code
+            from
+                user_details ud
+            where
+                1 = 1                
+        '''
+    else:            
+        sqlRec=f'''
+            select
+                id,
+                distributor_id ,
+                username ,
+                location_id ,
+                location_name ,
+                branch_code
+            from
+                user_details ud
+            where
+                1 = 1                
+                and distributor_id='{romId}'
+        '''
+
+    print(sqlRec)
+    distListDf=pd.read_sql(sqlRec,con=conn)
+    distListDf['location_id']= distListDf['location_id'].astype('str')
+    print(distListDf.info())
+    return distListDf.to_dict(orient='records')
+
+#  post mapping
+@router.post('/addDistMapping')
+async def insertDistMapping(df):
+    print(df)
+        
 
 @router.get('/getSalesDistributorStatus/{current_date}', status_code=status.HTTP_200_OK)
 async def get_distributor_status(current_date, db: Session = Depends(database.get_db)):
