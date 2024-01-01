@@ -1,0 +1,101 @@
+from ast import Str
+import sourcedefender
+# import imp
+from sqlite3 import Date
+from tokenize import String
+# from flask import session
+from marshmallow import Schema
+from pendulum import date
+from sqlalchemy.orm import sessionmaker,Session
+from doctest import Example
+from lib2to3.pytree import Base
+# from re import M
+import uvicorn
+# from xmlrpc.client import DateTime
+
+# import datetime
+from datetime import date, datetime
+import uuid
+import sqlalchemy
+from sqlalchemy import Column, Integer, alias, text,func
+from fastapi import FastAPI,Depends, Query
+from pydantic import BaseModel, Field
+from typing import List, Optional
+import databases
+from databaserepo.databaseFactory import DatabaseConnect
+from models.oracleModels import sales
+# from routers import routMrepSasData
+global db
+
+
+app = FastAPI()
+
+@app.on_event("startup")
+async def startup():
+    # await database.connect()
+    await DatabaseConnect.connect()
+
+
+@app.on_event('shutdown')
+async def shutdown():
+    await DatabaseConnect.disconnect()
+
+class SalesList(BaseModel):
+    DistributorCode:Optional[str]=None
+    InvoiceNumber:Optional[str]=None
+    InvoiceDate:Optional[date]=None
+    CustomerCode:Optional[str]=None
+    CustomerName:Optional[str]=None
+    CustomerAddress:Optional[str]=None
+    CustomerType:Optional[str]=None
+    ProductCode:Optional[str]=None
+    ProductName:Optional[str]=None
+    BatchNumber:Optional[str]=None
+    TradePrice:Optional[float]=None
+    Units:Optional[float]=None
+    Bonus:Optional[int]=None
+    Discount:Optional[float]=None
+    NetAmount:Optional[float]=None
+    TransactionType:Optional[str]=None
+    BrickCode:Optional[str]=None
+    BrickName:Optional[str]=None
+
+    class Config():
+        orm_mode = True
+        allow_population_by_field_name = True
+
+class PhnxSalesList(BaseModel):
+    trx_date:Optional[date]=None
+    trx_number:Optional[str]=None
+    class Config():
+        orm_mode = True
+        allow_population_by_field_name = True
+
+class mrepSalesList(BaseModel):
+    org_id:Optional[str]=None
+    org_desc:Optional[str]=None
+    trx_number:Optional[str]=None
+    trx_date:Optional[date]=None
+
+    class Config():
+        orm_mode = True
+        allow_population_by_field_name = True
+
+
+
+@app.get("/sales",response_model=List[SalesList])
+async def all_sales(fromDate:date,toDate:date, limit=1000):
+    query = sales.select().where(sales.c.InvoiceDate>=fromDate
+    ,sales.c.InvoiceDate<=toDate
+    )
+    return await  DatabaseConnect.fetch_all(query)
+    # return DatabaseConnect.fetch_all(query)
+
+
+# if __name__=="__main__":
+#     uvicorn.run(app,host="192.168.130.54",port=9000)
+
+if __name__=="__main__":
+    uvicorn.run(app,host="192.168.130.81",port=9000)
+
+    # http://localhost:9000/sales?fromDate=2022-07-01&toDate=2022-07-03
