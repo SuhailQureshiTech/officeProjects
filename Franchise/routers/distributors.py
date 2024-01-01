@@ -1,9 +1,10 @@
 #import sections--All imports
+from typing import Any
 from datetime import date, datetime, timedelta, timezone
 import time
 from io import BytesIO
 from typing import Optional
-from fastapi import APIRouter, Depends, status, UploadFile, File, HTTPException,Request
+from fastapi import APIRouter, Depends, status, UploadFile, File, HTTPException,Request,Body
 from fastapi.responses import FileResponse
 from numpy import datetime64, int64
 import pandas as pd
@@ -44,7 +45,7 @@ async def upload_sales_file(company_code, user_id, request: Request, files: Uplo
                     SELECT sap_cust 
                     FROM franchise.sap_customer x
             '''
-    
+        
     getSapItems=f''' 
                 select distinct  item_code  from sap_items
                 '''
@@ -758,33 +759,37 @@ async def allDistMapping(romId: Optional[str]=None):
     if romId==None:
         sqlRec=f'''
             select
-                id,
-                distributor_id ,
-                username ,
-                location_id ,
-                location_name ,
-                branch_code
+                ud.id,
+                ud.distributor_id ,
+                ud.username ,
+                ud.location_id ,
+                ud.location_name ,
+                ud.branch_code
             from
                 user_details ud
+                left outer join users u on (u.distributor_id=ud.distributor_id and u.role_id=4)
             where
-                1 = 1                
+                1 = 1 
+                and u.role_id =4     
         '''
     else:            
         sqlRec=f'''
             select
-                id,
-                distributor_id ,
-                username ,
-                location_id ,
-                location_name ,
-                branch_code
+                ud.id,
+                ud.distributor_id ,
+                ud.username ,
+                ud.location_id ,
+                ud.location_name ,
+                ud.branch_code
             from
                 user_details ud
+                left outer join users u on (u.distributor_id=ud.distributor_id )
             where
-                1 = 1                
-                and distributor_id='{romId}'
+                1 = 1 
+                and u.role_id=3            
         '''
-
+        # and distributor_id='{romId}'
+        
     print(sqlRec)
     distListDf=pd.read_sql(sqlRec,con=conn)
     distListDf['location_id']= distListDf['location_id'].astype('str')
@@ -793,9 +798,24 @@ async def allDistMapping(romId: Optional[str]=None):
 
 #  post mapping
 @router.post('/addDistMapping')
-async def insertDistMapping(df):
+async def insertDistMapping( payload: Any = Body(None)
+                            ):    
+    print('type')
+    print(type(payload))
+    df=pd.DataFrame.from_dict(payload)
     print(df)
+    db = create_engine(conn_string)
+    conn = db.connect()
+    try:
+        success = df.to_sql('rmo_dist_mapping', schema="franchise",
+                            if_exists='append', con=conn, index=False)        
         
+        if success:
+            return{"message":"Completed..."}    
+            print('completed...')    
+    except Exception as err:
+            return{"Error-return":err}    
+            print("Error Got..... : ",err)
 
 @router.get('/getSalesDistributorStatus/{current_date}', status_code=status.HTTP_200_OK)
 async def get_distributor_status(current_date, db: Session = Depends(database.get_db)):
