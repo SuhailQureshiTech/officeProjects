@@ -327,12 +327,9 @@ def insertAttendanceIntoSap():
                 AND date1 BETWEEN {vStartSapDate} AND {vEndSapDate} 
                 AND Concat(tmid, cardno, date1, p_day, ismanual, time, flag) NOT IN 
                 (
-                    SELECT
-                        Concat(Min(tmid), cardno, date1, p_day, ismanual, Min(time), flag) 
-                    FROM
-                        attendance.vw_attendance_inout_rec 
-                    WHERE
-                        1 = 1 
+                    SELECT  Concat(Min(tmid), cardno, date1, p_day, ismanual, Min(time), flag) 
+                    FROM    attendance.vw_attendance_inout_rec 
+                    WHERE   1 = 1 
                     GROUP BY
                         cardno,
                         date1,
@@ -400,9 +397,9 @@ def insertIntoAttendance66():
                 (SELECT concat(cardno, punchdatetime, machineno, p_day, ismanual, inout) 
                     from Tran_MachineRawPunch tmrp 
                     where
-                        1 = 1 and cast(PunchDatetime as date) BETWEEN {vStartDate} and {vEndDate} and temp = 'API' 
-                )
-    '''
+                        1 = 1 and cast(PunchDatetime as date) BETWEEN {vStartDate} and {vEndDate} and temp = 'API'  )
+                '''
+    
     attendance66.execute(sqlDelExistsRecords)
 
     sqlInsertData=f'''
@@ -463,9 +460,3 @@ taskInsertData66=PythonOperator(
 )
     
 taskDelAttendanceRecords>>dummy_task>>[taskGetAttendanceRecords,taskApiAttendanceRecords>>taskInsertData66]>>taskDelSapRecords>>taskInsertSapRecords
-# >>dummy_task>>[taskDelSapRecords>>taskInsertSapRecords]
-# dummy_task>>taskDelAttendanceRecords[taskGetAttendanceRecords,taskApiAttendanceRecords]    
-# [ taskDelAttendanceRecords,taskDelSapRecords]>>[taskGetAttendanceRecords>>taskApiAttendanceRecords]>>taskInsertSapRecords
- 
-
-

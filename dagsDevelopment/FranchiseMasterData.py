@@ -1,7 +1,7 @@
 from datetime import date, datetime,timedelta
 from hmac import trans_36
 from pickle import NONE
-
+from time import gmtime,strftime
 from airflow import DAG
 # from airflow import models
 # import airflow.operators.dummy
@@ -73,10 +73,15 @@ import calendar
 from io import StringIO
 import sqlalchemy
 import connectionClass
+
+utc = timezone.utc
+locatDateTime = datetime.now(utc)+timedelta(hours=5)
+currentHour=locatDateTime.strftime("%H")
+
 connection=connectionClass
 postgresEngine=connection.FranchiseAlchmy()
 spec_chars=connectionClass.getSpecChars()
-
+sapAlchemy=connectionClass.sapConnAlchemy()
 
 storage.blob._DEFAULT_CHUNKSIZE = 5 * 1024* 1024  # 5 MB
 storage.blob._MAX_MULTIPART_SIZE = 5 * 1024* 1024  # 5 MB
@@ -141,7 +146,7 @@ franchise_master_data = DAG(
     # run this dag at 2 hours 30 min interval from 00:00 28-03-2017
     catchup=False,
     # schedule_interval=None,
-    schedule_interval='0 6 * * *',
+    schedule_interval='0 6-21/3 * * *',
     dagrun_timeout=timedelta(minutes=120)
         )
 
@@ -157,58 +162,61 @@ def convert_to_preferred_format(sec):
 
 # getting Franchise Users
 def users():
-    import time
-    start = time.time()
-    table_id = 'data-light-house-prod.EDW.franchise_users'
-    df=pd.DataFrame()
-    userQuery=f'''SELECT 
-                    id,company_code,email,distributor_id,username,"password",created_at
-                    ,status,store_name,role_id,cast(location_id as text) location_id
-                    FROM users x
-    '''
-    df=pd.read_sql(userQuery,con=postgresEngine)
+    if int(currentHour)==6:
+        import time
+        start = time.time()
+        table_id = 'data-light-house-prod.EDW.franchise_users'
+        df=pd.DataFrame()
+        userQuery=f'''SELECT 
+                        id,company_code,email,distributor_id,username,"password",created_at
+                        ,status,store_name,role_id,cast(location_id as text) location_id
+                        FROM users x
+        '''
+        df=pd.read_sql(userQuery,con=postgresEngine)
 
-    df.columns = df.columns.str.strip()
+        df.columns = df.columns.str.strip()
 
-    df['id']=df['id'].astype('int')
-    df['role_id'].fillna(0,inplace=True)
-    df['role_id']=df['role_id'].astype('int')
-    df['location_id'].fillna(0,inplace=True)
-    df['location_id']=df['location_id'].astype('int')
-    df['created_at'] = pd.to_datetime(df['created_at'])   
-    df['transfer_date'] = creationDate
+        df['id']=df['id'].astype('int')
+        df['role_id'].fillna(0,inplace=True)
+        df['role_id']=df['role_id'].astype('int')
+        df['location_id'].fillna(0,inplace=True)
+        df['location_id']=df['location_id'].astype('int')
+        df['created_at'] = pd.to_datetime(df['created_at'])   
+        df['transfer_date'] = creationDate
 
-    # print(df.info())
+        # print(df.info())
 
-    # for char in spec_chars:
-    #     df['id'] = df['id'].str.replace(
-    #         char, ' ', regex=True)
-    #     df['id'] = df['id'].str.split().str.join(" ")
+        # for char in spec_chars:
+        #     df['id'] = df['id'].str.replace(
+        #         char, ' ', regex=True)
+        #     df['id'] = df['id'].str.split().str.join(" ")
 
 
-    df.to_parquet('users.parquet')
-    df1=pd.read_parquet('users.parquet')
+        df.to_parquet('users.parquet')
+        df1=pd.read_parquet('users.parquet')
 
-    credentials = service_account.Credentials.from_service_account_file(
-        '/home/airflow/airflow/data-light-house-prod.json')
+        credentials = service_account.Credentials.from_service_account_file(
+            '/home/airflow/airflow/data-light-house-prod.json')
 
-    project_id = 'data-light-house-prod'
-    client=bigquery.Client(credentials=credentials,project=project_id)
+        project_id = 'data-light-house-prod'
+        client=bigquery.Client(credentials=credentials,project=project_id)
 
-    job_config = bigquery.LoadJobConfig(
-        write_disposition=bigquery.WriteDisposition.WRITE_TRUNCATE,
-        source_format=bigquery.SourceFormat.PARQUET
-        )
+        job_config = bigquery.LoadJobConfig(
+            write_disposition=bigquery.WriteDisposition.WRITE_TRUNCATE,
+            source_format=bigquery.SourceFormat.PARQUET
+            )
 
-    filePath = "users.parquet"
-    with open(filePath,"rb") as source_file:
-        load_job = client.load_table_from_file(
-            source_file, table_id, job_config=job_config
-        )  
+        filePath = "users.parquet"
+        with open(filePath,"rb") as source_file:
+            load_job = client.load_table_from_file(
+                source_file, table_id, job_config=job_config
+            )  
 
-        load_job.result()  # Waits for the job to complete.
+            load_job.result()  # Waits for the job to complete.
 
-    print(f"Job Completed,{convert_to_preferred_format(time.time() - start)}")
+        print(f"Job Completed,{convert_to_preferred_format(time.time() - start)}")
+    else:
+        print('executed.....')
 
 syncUsersData = PythonOperator(
     task_id="syncUsersData"
@@ -218,46 +226,49 @@ syncUsersData = PythonOperator(
 
 # Locations
 def locations():
-    import time
-    start = time.time()
-    table_id = 'data-light-house-prod.EDW.franchise_locations'
-    df=pd.DataFrame()
-    locationQuery=f'''SELECT 
-                    location_id,location_name,branch_code
-                    FROM locations 
-                '''
+    if int(currentHour)==6:
+        import time
+        start = time.time()
+        table_id = 'data-light-house-prod.EDW.franchise_locations'
+        df=pd.DataFrame()
+        locationQuery=f'''SELECT 
+                        location_id,location_name,branch_code
+                        FROM locations 
+                    '''
+            
+        df=pd.read_sql(locationQuery,con=postgresEngine)
+        df.columns = df.columns.str.strip()
         
-    df=pd.read_sql(locationQuery,con=postgresEngine)
-    df.columns = df.columns.str.strip()
-    
-    df['location_id'] = df['location_id'].astype('int')
-    df['location_name'] = df['location_name'].astype(pd.StringDtype())
-    df['transfer_date'] = creationDate
+        df['location_id'] = df['location_id'].astype('int')
+        df['location_name'] = df['location_name'].astype(pd.StringDtype())
+        df['transfer_date'] = creationDate
 
-    df.to_parquet('locations.parquet')
-    df1=pd.read_parquet('locations.parquet')
+        df.to_parquet('locations.parquet')
+        df1=pd.read_parquet('locations.parquet')
 
-    credentials = service_account.Credentials.from_service_account_file(
-        '/home/airflow/airflow/data-light-house-prod.json'
+        credentials = service_account.Credentials.from_service_account_file(
+            '/home/airflow/airflow/data-light-house-prod.json'
+            )
+
+        project_id = 'data-light-house-prod'
+        client=bigquery.Client(credentials=credentials,project=project_id)
+
+        job_config = bigquery.LoadJobConfig(
+            write_disposition=bigquery.WriteDisposition.WRITE_TRUNCATE,
+            source_format=bigquery.SourceFormat.PARQUET,
         )
 
-    project_id = 'data-light-house-prod'
-    client=bigquery.Client(credentials=credentials,project=project_id)
+        filePath = "locations.parquet"
+        with open(filePath,"rb") as source_file:
+            load_job = client.load_table_from_file(
+                source_file, table_id, job_config=job_config
+            )  
 
-    job_config = bigquery.LoadJobConfig(
-        write_disposition=bigquery.WriteDisposition.WRITE_TRUNCATE,
-        source_format=bigquery.SourceFormat.PARQUET,
-    )
+            load_job.result()  # Waits for the job to complete.
 
-    filePath = "locations.parquet"
-    with open(filePath,"rb") as source_file:
-        load_job = client.load_table_from_file(
-            source_file, table_id, job_config=job_config
-        )  
-
-        load_job.result()  # Waits for the job to complete.
-
-    print(f"Job Completed,{convert_to_preferred_format(time.time() - start)}")
+        print(f"Job Completed,{convert_to_preferred_format(time.time() - start)}")
+    else:
+        print('executed...')
 
 syncLocationsData=PythonOperator(
                                     task_id="syncLocationsData"
@@ -267,46 +278,49 @@ syncLocationsData=PythonOperator(
 
 # roles
 def roles():
-    import time
-    start = time.time()
-    table_id = 'data-light-house-prod.EDW.franchise_roles'
-    df=pd.DataFrame()
-    locationQuery=f'''SELECT 
-                    id,roles_name      FROM roles
-                        '''
+    if int(currentHour)==6:
+        import time
+        start = time.time()
+        table_id = 'data-light-house-prod.EDW.franchise_roles'
+        df=pd.DataFrame()
+        locationQuery=f'''SELECT 
+                        id,roles_name      FROM roles
+                            '''
+            
+        df=pd.read_sql(locationQuery,con=postgresEngine)
+        df.columns = df.columns.str.strip()
         
-    df=pd.read_sql(locationQuery,con=postgresEngine)
-    df.columns = df.columns.str.strip()
-    
-    df['id'] = df['id'].astype('int')
-    df['roles_name'] = df['roles_name'].astype(pd.StringDtype())
-    df['transfer_date'] = creationDate
+        df['id'] = df['id'].astype('int')
+        df['roles_name'] = df['roles_name'].astype(pd.StringDtype())
+        df['transfer_date'] = creationDate
 
-    # print(df.info())
-    df.to_parquet('roles.parquet')
-    df1=pd.read_parquet('roles.parquet')
+        # print(df.info())
+        df.to_parquet('roles.parquet')
+        df1=pd.read_parquet('roles.parquet')
 
-    credentials = service_account.Credentials.from_service_account_file(
-        '/home/airflow/airflow/data-light-house-prod.json'
+        credentials = service_account.Credentials.from_service_account_file(
+            '/home/airflow/airflow/data-light-house-prod.json'
+            )
+
+        project_id = 'data-light-house-prod'
+        client=bigquery.Client(credentials=credentials,project=project_id)
+
+        job_config = bigquery.LoadJobConfig(
+            write_disposition=bigquery.WriteDisposition.WRITE_TRUNCATE,
+            source_format=bigquery.SourceFormat.PARQUET,
         )
 
-    project_id = 'data-light-house-prod'
-    client=bigquery.Client(credentials=credentials,project=project_id)
+        filePath = "roles.parquet"
+        with open(filePath,"rb") as source_file:
+            load_job = client.load_table_from_file(
+                source_file, table_id, job_config=job_config
+            )  
 
-    job_config = bigquery.LoadJobConfig(
-        write_disposition=bigquery.WriteDisposition.WRITE_TRUNCATE,
-        source_format=bigquery.SourceFormat.PARQUET,
-    )
+            load_job.result()  # Waits for the job to complete.
 
-    filePath = "roles.parquet"
-    with open(filePath,"rb") as source_file:
-        load_job = client.load_table_from_file(
-            source_file, table_id, job_config=job_config
-        )  
-
-        load_job.result()  # Waits for the job to complete.
-
-    print(f"Job Completed,{convert_to_preferred_format(time.time() - start)}")
+        print(f"Job Completed,{convert_to_preferred_format(time.time() - start)}")
+    else:
+        print('executed...')
 
 syncRolesData=PythonOperator(
                                     task_id="syncRolesData"
@@ -326,9 +340,70 @@ delParquetFiles=PythonOperator(
                                     ,dag=franchise_master_data
                                   )
 
+
+
+
+#  sap users into franchise
+def sapUsers():
+    df=pd.DataFrame()
+    queryDelUsers=f'''
+             delete from sap_customer
+        '''
+
+    postgresEngine.execute(queryDelUsers)
+
+    locationQuery=f'''
+                    SELECT SAP_CUST ,SAP_PLANT 
+                    FROM SAP_CUSTOMER_FRANCHISE 
+                    '''
+        
+    df=pd.read_sql(locationQuery,con=sapAlchemy)
+    df.columns = df.columns.str.strip()
+    df.to_sql('sap_customer',schema='franchise',con=postgresEngine,if_exists='append',index=False)
+    print('done')
+
+taskSapUsers=PythonOperator(
+             task_id="sapUsers"
+            ,python_callable=sapUsers
+            ,dag=franchise_master_data
+                                  )
+
+
+def sapItems():
+    df=pd.DataFrame()
+    queryDelUsers=f'''
+             delete from sap_items
+        '''
+
+    postgresEngine.execute(queryDelUsers)
+
+    itemsQuery=f'''
+                SELECT ITEM_CODE,ITEM_DESC,PLANT,BUSINESS_LINE_ID
+                FROM  SAP_ITEMS
+            '''
+        
+    df=pd.read_sql(itemsQuery,con=sapAlchemy)
+    df.columns = df.columns.str.strip()
+
+    df.to_sql('sap_items'
+              ,schema='franchise'
+              ,con=postgresEngine
+              ,if_exists='append'
+              ,index=False)
+    print('done')
+
+taskSapItems=PythonOperator(
+             task_id="sapItems"
+            ,python_callable=sapItems
+            ,dag=franchise_master_data
+                                  )
+
 # testing functions
 # users()
 # locations()
 # roles()
+# sapUsers()
+    
 
-[syncUsersData,syncLocationsData,syncRolesData]>>delParquetFiles
+
+[syncUsersData,syncLocationsData,syncRolesData,taskSapUsers,taskSapItems]>>delParquetFiles
