@@ -106,10 +106,8 @@ vStartDate = None
 vEndDate = None
 
 vStartDate,vEndDate=returnDataDate()
-creationDate = datetime.today()
-now = datetime.now()
-current_time = now.time()
-
+# vStartDate='2023-08-01'
+# vEndDate='2023-09-30'
 
 vStartDate="'"+str(vStartDate)+"'"
 vEndDate="'"+str(vEndDate)+"'"
@@ -117,6 +115,9 @@ vEndDate="'"+str(vEndDate)+"'"
 print('else : from date :', vStartDate)
 print('else : enmd date :', vEndDate)
 
+creationDate = datetime.today()
+now = datetime.now()
+current_time = now.time()
 
 # def success_function(context):
 #     #dag_run = context.get('dag_run')
@@ -148,7 +149,7 @@ franchise_sale_merging = DAG(
     default_args=default_args,
     catchup=False,
     start_date=datetime(2023, 11, 20),
-    schedule_interval='00 04 * * *',
+    schedule='00 04 * * *',
     # schedule_interval=None,
     # on_success_callback=success_function,
     # email_on_failure=failure_email_function,
@@ -407,8 +408,9 @@ def deleteFranchiseStockRecords():
     print('vEnd Date ', vEndDate)
 
     delQuery=f'''delete from data-light-house-prod.EDW.franchise_stock
-                    where dated  between {vStartDate} and {vEndDate}
+                    where dated  between {vStartDate} and {vEndDate}                   
       '''
+
     job=bigQueryClient.query(delQuery)
     job.result()
 
@@ -432,8 +434,9 @@ def getFranchiseStock():
             purchase_unit,
             created_date
             from franchise_stock fs2
-                '''
-            # where 1=1 and dated='2023-12-10'
+            where dated  between {vStartDate} and {vEndDate}
+
+            '''
 
     franchiseStock=pd.read_sql(sqlGetStock,con=franchiseEngine)
 

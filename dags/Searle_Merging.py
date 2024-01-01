@@ -192,6 +192,42 @@ deleteInvoiceData=PythonOperator(
                 python_callable=deleteRecords,
                 dag=searle_merging)
 
+# def insertIblgrpHcmData():   
+#     oracleTable='EBS_INVOICE_DATA_TBL'
+#     print('insertIblgrpHcmData')
+#     print(vStartDate, ' ', vEndDate)
+
+#     global dataFrame1
+#     project_id = 'data-light-house-prod'
+#     table_id = 'data-light-house-prod.EDW.IBL_SALES_DATA_BAKUP'
+#     pandas_gbq.context.credentials = credentials
+
+#     client = bigquery.Client(credentials=credentials, project=project_id)
+#     sqlQuery = f'''SELECT
+#                 FORMAT_DATE('%d-%b-%y',BILLING_DATE) BILL_DT,
+#                 item_code ITEM_CODE,item_desc PROD_NM,
+#                 ORG_ID ORG_SAP_ID,    ORG_DESC ORG_DESC,
+#                 CHANNEL_DESC CHANNEL,DATA_FLAG,
+#                 sum(QUANTITY) SOLD_QTY
+#                 ,sum(AMOUNT) GROSS,round(IFNULL(unit_selling_price,0))  unit_selling_price
+#                 FROM `data-light-house-prod.EDW.VW_SEARLE_SALES`
+#                 WHERE 1=1 and BILLING_DATE  between {vStartDate} and {vEndDate}
+#                 GROUP BY
+#                 FORMAT_DATE('%d-%b-%y',BILLING_DATE) ,        item_code ,item_desc ,
+#                 ORG_ID ,    ORG_DESC ,  CHANNEL_DESC,DATA_FLAG,unit_selling_price
+#             '''
+
+#     dataFrame1 = client.query(sqlQuery).to_dataframe()
+#     dataFrame1['BILL_DT'] = pd.to_datetime(dataFrame1['BILL_DT'])
+#     print (dataFrame1)
+#     rows = [tuple(x) for x in dataFrame1.values]
+#     try:
+#         oracleCursor.executemany(f"insert into {oracleTable}(BILL_DT,ITEM_CODE,PROD_NM,ORG_SAP_ID,ORG_DESC,CHANNEL,DATA_FLAG,SOLD_QTY,GROSS,UNIT_SELLING_PRICE)values(:1,:2,:3,:4,:5,:6,:7,:8,:9,:10)", rows)
+#         oracleConnectionDB.commit()
+
+#     except Exception as e:
+#         oracleConnectionDB.rollback()
+#         print(e)
 
 def insertIblgrpHcmData():   
     oracleTable='EBS_INVOICE_DATA_TBL'
@@ -221,13 +257,34 @@ def insertIblgrpHcmData():
     dataFrame1 = client.query(sqlQuery).to_dataframe()
     dataFrame1['BILL_DT'] = pd.to_datetime(dataFrame1['BILL_DT'])
     print (dataFrame1)
-    rows = [tuple(x) for x in dataFrame1.values]
-    try:
-        oracleCursor.executemany(f"insert into {oracleTable}(BILL_DT,ITEM_CODE,PROD_NM,ORG_SAP_ID,ORG_DESC,CHANNEL,DATA_FLAG,SOLD_QTY,GROSS,UNIT_SELLING_PRICE)values(:1,:2,:3,:4,:5,:6,:7,:8,:9,:10)", rows)
-        oracleConnectionDB.commit()
 
+    oracle_dtypes = {
+        'BILL_DT'                   :DATE,
+        'ITEM_CODE'			        :VARCHAR2(100),
+        'PROD_NM'		            :VARCHAR2(200),
+        'ORG_SAP_ID'     			:VARCHAR2(10),
+        'ORG_DESC'                  :VARCHAR2(200),
+        'CHANNEL'                   :VARCHAR2(100),
+        'DATA_FLAG'                 :VARCHAR2(100),
+        'SOLD_QTY'                  :NUMBER(38,0),
+        'GROSS'                     :NUMBER(18,2),
+        'UNIT_SELLING_PRICE'        :NUMBER(18,2)
+             }
+
+    try:
+        success=dataFrame1.to_sql(oracleTable,schema='IBLGRPHCM'
+                          ,if_exists='append'
+                          ,con=oracleAlchemy
+                          ,index=False
+                          ,chunksize=25000
+                          ,dtype=oracle_dtypes
+                          )
+        
+        if success:
+            print('completed Successfully....')
     except Exception as e:
-        oracleConnectionDB.rollback()
+        print(e)
+        # oracleConnectionDB.rollback()
         print(e)
 
 insertInvoiceData=PythonOperator(    
@@ -435,14 +492,20 @@ def getEbsInvoiceOrderDataDfSql():
             'total_qty'             :FLOAT,
             'sales_vlaue'           :FLOAT,
             'net_sale_value'        :FLOAT,
-
             'invoice_date_ibl'      :DATE,
             'invoice_no_ibl'        :VARCHAR2(50),
             'tax_recoverable'       :FLOAT,
             'customer_trx_id'       :VARCHAR2(25)             
              }
     print(df)
-    df.to_sql(oracleTable,schema='IBLGRPHCM',if_exists='append',con=oracleAlchemy,index=False,dtype=oracle_dtypes)
+    df.to_sql(oracleTable
+              ,schema='IBLGRPHCM'
+              ,if_exists='append'
+              ,con=oracleAlchemy
+              ,index=False
+              ,dtype=oracle_dtypes
+              ,chunksize=25000
+              )
     print('done.....................')
 
 
@@ -533,7 +596,14 @@ def insertFranchisStockData():
     rowCounts=result.rowcount
     print(f''' delte row count {rowCounts}   ''')
 
-    dataFrame1.to_sql(oracleTable,schema='IBLGRPHCM',if_exists='append',con=oracleAlchemy,index=False,dtype=oracle_dtypes)
+    dataFrame1.to_sql(oracleTable
+                      ,schema='IBLGRPHCM'
+                      ,if_exists='append'
+                      ,con=oracleAlchemy
+                      ,index=False
+                      ,dtype=oracle_dtypes
+                      ,chunksize=25000
+                      )
     print('done.....................')
 
 # taskFranchiseStock=PythonOperator(
@@ -541,6 +611,7 @@ def insertFranchisStockData():
 #     ,python_callable=insertFranchisStockData
 #     ,dag=searle_merging
 # )
+
 
 # deleteRecords()
 # insertIblgrpHcmData()
