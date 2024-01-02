@@ -36,7 +36,7 @@ from fileinput import filename
 import psycopg2 as pg
 
 from dateutil import parser
-from datetime import datetime, date
+from datetime import datetime, date, timezone
 import sys
 from http import client
 import pandas as pds
@@ -115,7 +115,10 @@ vEndDate="'"+str(vEndDate)+"'"
 print('else : from date :', vStartDate)
 print('else : enmd date :', vEndDate)
 
-creationDate = datetime.today()
+utc=timezone.utc
+date = datetime.now(utc)
+creationDate = date + timedelta(hours=5)
+
 now = datetime.now()
 current_time = now.time()
 
@@ -464,11 +467,75 @@ def getFranchiseStock():
     pandas_gbq.to_gbq(franchiseStock, f'{GCS_PROJECT}.{DATA_SET_ID}.{tableId}', project_id=GCS_PROJECT, if_exists='append')
     print('done.....................')
 
+# Franchise Targets
+def deleteFranchiseTargets():
+    print('vstart date ',vStartDate)
+    print('vEnd Date ', vEndDate)
+
+    delQuery=f'''delete from data-light-house-prod.EDW.franchise_targets
+                    where cast(trg_month as date) between {vStartDate} and {vEndDate}                   
+      '''
+
+    job=bigQueryClient.query(delQuery)
+    job.result()
+
+def getFranchiseTargets():
+    tableId='franchise_targets'
+    sqlGetTargets=f'''     
+                select tmonth,rd_code,rd_name,"Trg_val",trg_month,"Trg_year"
+                from rd_targets rt 
+                where 1=1 and trg_month  between {vStartDate} and {vEndDate}    
+            '''
+
+    franchiseTargets=pd.read_sql(sqlGetTargets,con=franchiseEngine)
+    print(franchiseTargets)
+
+    # dataframe type conversion
+    convert_dict = {
+                    'tmonth': 'string'
+                    ,'rd_code': 'int32'                    
+                    ,'rd_name': 'string'
+                    ,'Trg_val':'float32'                    
+                    ,'Trg_year': 'int32'
+                }
+    
+    franchiseTargets = franchiseTargets.astype(convert_dict)
+
+    franchiseTargets['trg_month']=pd.to_datetime(franchiseTargets['trg_month'])
+
+    # franchiseStock['expiry_date']=pd.to_datetime(franchiseStock['expiry_date'])
+    # franchiseStock['created_date']=pd.to_datetime(franchiseStock['created_date'])
+
+    franchiseTargets['transfer_date'] = creationDate
+    print(franchiseTargets.info())
+
+    pandas_gbq.to_gbq(franchiseTargets
+                      , f'{GCS_PROJECT}.{DATA_SET_ID}.{tableId}'
+                      , project_id=GCS_PROJECT
+                      , if_exists='append'
+                      )
+    print('done.....................')
+    
 
 # deleteRecords() 
 # getFranchiseDataDfSql()
 # deleteFranchiseStockRecords()
 # getFranchiseStock()
+# deleteFranchiseTargets()
+# getFranchiseTargets()    
+
+
+taskDelFranchiseTargets=PythonOperator(
+    task_id='delFranchiseTargets'
+    ,python_callable=deleteFranchiseTargets
+    ,dag=franchise_sale_merging
+)
+
+taskInsertFranchiseTargets=PythonOperator(
+    task_id='insertFranchiseTargets'
+    ,python_callable=getFranchiseTargets
+    ,dag=franchise_sale_merging
+)
 
 taskDeleteStockRec=PythonOperator(
                 task_id='deleteFranchiseStock'
@@ -497,6 +564,7 @@ taskInsertingRecords=PythonOperator(
 [
     taskDeleteRecrods>>taskInsertingRecords
     ,taskDeleteStockRec>>taskInsertStockRec
+    ,taskDelFranchiseTargets>>taskInsertFranchiseTargets
  ]
 
 
